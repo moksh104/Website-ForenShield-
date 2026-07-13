@@ -58,14 +58,7 @@ export function BatcomputerHUD() {
 
   useEffect(() => {
     setMounted(true);
-    const saved = typeof window !== "undefined" && window.localStorage.getItem("fs.hud.open");
-    if (saved === "1") setOpen(true);
   }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
-    window.localStorage.setItem("fs.hud.open", open ? "1" : "0");
-  }, [open, mounted]);
 
   // rotate the alert ticker
   useEffect(() => {
@@ -86,21 +79,22 @@ export function BatcomputerHUD() {
     >
       <div
         className={[
-          "pointer-events-auto rounded-2xl glass-strong shadow-elevated overflow-hidden",
+          "pointer-events-auto rounded-2xl glass-strong shadow-elevated overflow-hidden backdrop-blur-xl",
           "border border-primary/20",
           open ? "w-[300px]" : "w-[210px]",
-          "transition-[width] duration-300 ease-out",
+          "transition-[width] duration-300 ease-out flex flex-col",
+          open ? "max-h-[400px]" : "max-h-auto"
         ].join(" ")}
       >
         {/* top scanline */}
-        <div className="relative h-px w-full overflow-hidden">
+        <div className="relative h-px w-full overflow-hidden shrink-0">
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/70 to-transparent animate-scan" />
         </div>
 
         {/* Header bar */}
         <button
           onClick={() => setOpen((o) => !o)}
-          className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-white/[0.03] transition"
+          className="w-full shrink-0 flex items-center gap-2.5 px-3 py-2 text-left hover:bg-white/[0.03] transition"
           aria-expanded={open}
           aria-label="Toggle HUD"
         >
@@ -117,7 +111,7 @@ export function BatcomputerHUD() {
         </button>
 
         {/* Counters strip (always visible) */}
-        <div className="grid grid-cols-3 border-t border-white/5">
+        <div className="grid grid-cols-3 border-t border-white/5 shrink-0">
           <Counter icon={<FileSearch className="h-3 w-3" />} label="EVID" value="128" tone="text-primary" />
           <Counter icon={<FolderLock className="h-3 w-3" />} label="CASE" value="07" tone="text-secondary" />
           <Counter icon={<Sparkles className="h-3 w-3" />} label="XP" value="4.8K" tone="text-achievement" />
@@ -125,9 +119,9 @@ export function BatcomputerHUD() {
 
         {/* Expanded body */}
         {open && (
-          <div className="border-t border-white/5 p-3 space-y-3 animate-fade-up">
+          <div className="border-t border-white/5 p-3 space-y-3 animate-fade-up overflow-y-auto custom-scrollbar">
             {/* Alert ticker */}
-            <div className="rounded-lg border border-danger/25 bg-danger/[0.06] p-2">
+            <div className="rounded-lg border border-danger/25 bg-danger/[0.06] p-2 shrink-0">
               <div className="flex items-center gap-1.5 text-[9px] tracking-[0.2em] text-danger">
                 <ShieldAlert className="h-3 w-3 animate-pulse-glow" /> ALERT FEED
               </div>
@@ -139,7 +133,7 @@ export function BatcomputerHUD() {
             </div>
 
             {/* Vitals */}
-            <div className="grid grid-cols-2 gap-2 text-[10px]">
+            <div className="grid grid-cols-2 gap-2 text-[10px] shrink-0">
               <Vital label="UPLINK" value="STABLE" tone="text-success" dot />
               <Vital label="THREAT" value="ELEVATED" tone="text-warning" dot />
               <Vital label="LATENCY" value="42ms" tone="text-primary" />
@@ -147,7 +141,7 @@ export function BatcomputerHUD() {
             </div>
 
             {/* Quick jumps */}
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="grid grid-cols-3 gap-1.5 shrink-0">
               <HudJump to="/app" icon={<Activity className="h-3 w-3" />} label="HQ" />
               <HudJump to="/investigate" icon={<FileSearch className="h-3 w-3" />} label="LAB" />
               <HudJump to="/simulate" icon={<Zap className="h-3 w-3" />} label="SIM" />
@@ -156,7 +150,7 @@ export function BatcomputerHUD() {
         )}
 
         {/* bottom scanline */}
-        <div className="relative h-px w-full overflow-hidden">
+        <div className="relative h-px w-full overflow-hidden shrink-0">
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-secondary/60 to-transparent animate-scan" />
         </div>
       </div>

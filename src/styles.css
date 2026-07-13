@@ -48,7 +48,7 @@
 :root {
   --radius: 0.75rem;
 
-  /* ForenShield — Electric Blue × Cyan on Deep Navy (reference theme) */
+  /* ForenShield â€” Electric Blue Ã— Cyan on Deep Navy (reference theme) */
   --background: oklch(0.14 0.028 260);          /* #0A0E1A Deep Navy */
   --surface: oklch(0.19 0.035 260);             /* #111832 Panel Navy */
   --elevated: oklch(0.24 0.045 260);            /* #1A2547 Elevated Navy */
@@ -366,4 +366,78 @@
     pointer-events: none;
     transform: scale(1.08);
   }
+}
+
+@utility custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.55 0.22 260 / 0.3) transparent;
+  &::-webkit-scrollbar {
+    width: 5px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: oklch(0.55 0.22 260 / 0.3);
+    border-radius: 10px;
+  }
+}
+
+@keyframes drift-twinkle {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(-3px);
+    opacity: 0.8;
+  }
+}
+
+@utility animate-drift-twinkle {
+  animation: drift-twinkle 5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-drift-twinkle {
+    animation-play-state: paused !important;
+    opacity: 0.5 !important;
+    transform: none !important;
+  }
+}
+
+/* ============ Phone Showcase ============ */
+@keyframes phone-scroll {
+  0%, 10% { transform: translateY(0); }
+  14.2%, 24.2% { transform: translateY(-12.5%); }
+  28.5%, 38.5% { transform: translateY(-25%); }
+  42.8%, 52.8% { transform: translateY(-37.5%); }
+  57.1%, 67.1% { transform: translateY(-50%); }
+  71.4%, 81.4% { transform: translateY(-62.5%); }
+  85.7%, 95.7% { transform: translateY(-75%); }
+  100% { transform: translateY(-87.5%); }
+}
+
+@utility animate-phone-scroll {
+  animation: phone-scroll 28s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-phone-scroll {
+    animation-play-state: paused !important;
+    transform: none !important;
+  }
+}
+
+/* ============ Accordion ============ */
+@utility accordion-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 250ms ease-out;
+}
+@utility accordion-content-open {
+  grid-template-rows: 1fr;
+}
+@utility accordion-inner {
+  overflow: hidden;
 }

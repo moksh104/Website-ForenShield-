@@ -41,6 +41,15 @@ import {
   Lock,
   Layers,
   CheckCircle2,
+  Star,
+  User,
+  ChevronDown,
+  ChevronUp,
+  QrCode,
+  ShoppingCart,
+  Award,
+  Flame,
+  Terminal,
 } from "lucide-react";
 import { Reveal } from "@/components/landing/Reveal";
 import {
@@ -51,6 +60,15 @@ import {
   IllusReports,
 } from "@/components/landing/illustrations";
 import logo from "@/assets/logo.png";
+import {
+  MissionControlScreen,
+  CaseDetailsScreen,
+  EvidenceBoardScreen,
+  TimelineScreen,
+  AcademyScreen,
+  ReportsScreen,
+  ProfileScreen,
+} from "@/components/app-mockups";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -83,7 +101,13 @@ function LandingPage() {
         <StatsRow />
         <HowItWorks />
         <PlatformModules />
+        <CyberAcademySection />
+        <SimulationLabSection />
+        <DeviceShowcase />
+        <WorkflowStory />
+        <MissionControlSection />
         <SpotlightRow />
+        <TrustCredibility />
         <FinalCTA />
       </main>
       <Footer />
@@ -511,10 +535,8 @@ function Hero() {
             </Reveal>
 
             <Reveal delay={220}>
-              <p className="mt-10 max-w-[40ch] text-[16px] md:text-[18px] lg:text-[19px] text-white/[0.72] leading-[1.6]">
-                ForenShield is an interactive cybersecurity platform where you
-                learn by solving real-world cyber incidents and digital
-                forensics cases.
+              <p className="mt-10 max-w-[42ch] text-[16px] md:text-[18px] lg:text-[19px] text-white/[0.72] leading-[1.6]">
+                Learn cyber defense through interactive lessons, practice with live attack simulations, and investigate real digital forensics cases.
               </p>
             </Reveal>
 
@@ -606,15 +628,62 @@ function LetterStagger({
    ============================================================= */
 function MissionControl() {
   const [progress, setProgress] = useState(0);
-  const [timeline, setTimeline] = useState(0);
+  const [files, setFiles] = useState(0);
+  const [timelineVisible, setTimelineVisible] = useState(false);
+  const [startAnim, setStartAnim] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    const t1 = setInterval(() => setProgress((p) => (p >= 67 ? 67 : p + 1)), 40);
-    const t2 = setInterval(() => setTimeline((t) => (t + 0.6) % 100), 90);
-    return () => {
-      clearInterval(t1);
-      clearInterval(t2);
-    };
+    // Respect prefers-reduced-motion
+    const mql = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+    if (mql && mql.matches) {
+      setStartAnim(true);
+      setProgress(67);
+      setFiles(12);
+      setTimelineVisible(true);
+      return;
+    }
+
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) {
+        setStartAnim(true);
+        obs.unobserve(el);
+      }
+    }, { threshold: 0.1 });
+    obs.observe(el);
+    return () => obs.disconnect();
   }, []);
+
+  useEffect(() => {
+    if (!startAnim) return;
+    const mql = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+    if (mql && mql.matches) return;
+    
+    // Slight delay after hero text reveal (hero text delays are up to ~500ms)
+    const timeout = setTimeout(() => {
+      const start = performance.now();
+      const dur = 800;
+      const tick = (t: number) => {
+        let p = (t - start) / dur;
+        if (p > 1) p = 1;
+        // ease-out cubic
+        const ease = 1 - Math.pow(1 - p, 3);
+        setProgress(Math.round(67 * ease));
+        setFiles(Math.round(12 * ease));
+        if (p < 1) {
+          requestAnimationFrame(tick);
+        } else {
+          // Trigger timeline bar
+          setTimelineVisible(true);
+        }
+      };
+      requestAnimationFrame(tick);
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [startAnim]);
 
   const evidence = [
     { icon: Mail, label: "Email Header", count: "3 files", ok: true, tone: "primary" as const },
@@ -624,7 +693,7 @@ function MissionControl() {
   ];
 
   return (
-    <div className="relative">
+    <div className="relative" ref={ref}>
       {/* Frame */}
       <div className="relative rounded-[26px] p-[1px] bg-gradient-to-br from-primary/40 via-white/5 to-primary/20 shadow-elevated">
         <div className="relative rounded-[25px] overflow-hidden bg-[oklch(0.16_0.03_260)]/95 backdrop-blur-xl">
@@ -636,7 +705,7 @@ function MissionControl() {
               <span className="flex h-5 w-5 items-center justify-center rounded-md bg-primary/20 text-primary">
                 <Radar className="h-3 w-3" />
               </span>
-              <span className="text-white">INVESTIGATION DASHBOARD</span>
+              <span className="text-white">INVESTIGATION LAB PREVIEW</span>
               <span className="inline-flex items-center gap-1 rounded-full bg-success/15 border border-success/30 px-2 py-0.5 text-success text-[9px]">
                 <span className="h-1 w-1 rounded-full bg-success animate-blink" />
                 LIVE
@@ -666,8 +735,10 @@ function MissionControl() {
                     key={i}
                     className="group relative rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] hover:border-primary/30 transition-all px-2.5 py-2 flex items-center gap-2.5"
                     style={{
-                      animation: `fade-up 0.7s cubic-bezier(0.16,1,0.3,1) both`,
-                      animationDelay: `${600 + i * 100}ms`,
+                      opacity: startAnim ? 1 : 0,
+                      transform: startAnim ? "translateY(0)" : "translateY(8px)",
+                      transition: "opacity 0.6s cubic-bezier(0.16,1,0.3,1), transform 0.6s cubic-bezier(0.16,1,0.3,1)",
+                      transitionDelay: `${600 + i * 60}ms`,
                     }}
                   >
                     <span
@@ -730,7 +801,7 @@ function MissionControl() {
                 }
                 tone="danger"
               />
-              <StatusTile label="EVIDENCE" value={<span className="text-white font-bold text-lg">12 <span className="text-[10px] text-muted-foreground font-normal">Files</span></span>} />
+              <StatusTile label="EVIDENCE" value={<span className="text-white font-bold text-lg">{files} <span className="text-[10px] text-muted-foreground font-normal">Files</span></span>} />
               <div className="rounded-lg border border-white/5 bg-white/[0.02] px-2.5 py-2">
                 <div className="font-mono text-[8px] tracking-[0.22em] text-muted-foreground">
                   PROGRESS
@@ -763,15 +834,20 @@ function MissionControl() {
               </div>
               <div className="relative mt-2.5 h-1.5 rounded-full bg-white/5 overflow-hidden">
                 <div
-                  className="absolute inset-0 rounded-full"
+                  className="absolute inset-0 rounded-full origin-left transition-transform duration-[800ms] ease-out"
                   style={{
                     background:
                       "linear-gradient(90deg, oklch(0.55 0.22 260) 0%, oklch(0.80 0.17 75) 55%, oklch(0.65 0.24 25) 100%)",
+                    transform: timelineVisible ? "scaleX(1)" : "scaleX(0)",
                   }}
                 />
                 <div
-                  className="absolute top-1/2 -translate-y-1/2 h-3.5 w-3.5 rounded-full bg-white border-2 border-primary shadow-[0_0_16px_oklch(0.55_0.22_260/0.9)] transition-[left] duration-100"
-                  style={{ left: `calc(${timeline}% - 7px)` }}
+                  className="absolute top-1/2 -translate-y-1/2 h-3.5 w-3.5 rounded-full bg-white border-2 border-primary shadow-[0_0_16px_oklch(0.55_0.22_260/0.9)] transition-opacity duration-300"
+                  style={{ 
+                    left: `calc(100% - 7px)`,
+                    opacity: timelineVisible ? 1 : 0,
+                    transitionDelay: timelineVisible ? "800ms" : "0ms"
+                  }}
                 />
               </div>
               <div className="mt-2 flex items-center justify-between text-[9px] font-mono">
@@ -988,7 +1064,7 @@ function StatCard({
   return (
     <div
       ref={ref}
-      className={`group relative overflow-hidden rounded-2xl border border-white/10 ${toneCls[tone]} bg-white/[0.02] hover:bg-white/[0.04] active:scale-[0.98] transition-all duration-500 will-change-transform p-6 sm:p-8 cursor-default`}
+      className={`group relative overflow-hidden rounded-2xl border border-white/10 ${toneCls[tone]} bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-[250ms] ease-out hover:-translate-y-1.5 hover:scale-[1.02] hover:shadow-[0_12px_30px_-10px_oklch(0.55_0.22_260/0.1)] will-change-transform p-6 sm:p-8 cursor-default`}
     >
       <div className="flex items-start justify-between">
         <span className={`h-10 w-10 rounded-xl bg-current/10 border border-current/20 flex items-center justify-center ${toneCls[tone].split(" ")[0]}`}>
@@ -1055,11 +1131,11 @@ function HowItWorks() {
   }, []);
 
   const steps = [
-    { icon: Bell, title: "Receive Incident", desc: "Case arrives in your mission control" },
-    { icon: FolderOpen, title: "Collect Evidence", desc: "Gather digital artifacts and evidence" },
-    { icon: Search, title: "Analyze Artifacts", desc: "Inspect, decode and analyze data" },
-    { icon: Sliders, title: "Build Timeline", desc: "Reconstruct events in real time" },
-    { icon: ShieldCheck, title: "Solve & Report", desc: "Find the attacker & create reports" },
+    { icon: GraduationCap, title: "Learn Concepts", desc: "Master cyber defense in Academy" },
+    { icon: Play, title: "Practice Live", desc: "Face real-world simulations" },
+    { icon: Search, title: "Investigate Cases", desc: "Analyze digital forensics evidence" },
+    { icon: FileText, title: "Generate Reports", desc: "File verdicts and export findings" },
+    { icon: Trophy, title: "Earn Rank & XP", desc: "Level up your mission control" },
   ];
   return (
     <section id="features" className="relative px-4 sm:px-8 py-16 sm:py-24 scroll-mt-24">
@@ -1139,6 +1215,28 @@ function HowItWorks() {
    PLATFORM MODULES (carousel)
    ============================================================= */
 const MODULE_DETAILS: Record<string, { overview: string; features: string[]; skills: string[] }> = {
+  "Cyber Academy": {
+    overview: "Master the fundamentals of cyber defense through interactive, scenario-based learning modules. Build your foundational knowledge before facing live attacks.",
+    features: [
+      "Interactive learning modules",
+      "Scenario-based knowledge checks",
+      "Networking & Web Security basics",
+      "Command-line fundamentals",
+      "Progress tracking and certification",
+    ],
+    skills: ["Networking Basics", "Web Security", "Linux Essentials", "Cryptography"],
+  },
+  "Simulation Lab": {
+    overview: "Face real-world attack scenarios in a gamified environment. Make critical decisions under pressure, execute commands in a live console, and earn XP based on your response effectiveness.",
+    features: [
+      "Live attack simulations",
+      "Decision-based gameplay with consequences",
+      "Real-time terminal console",
+      "Objective tracking and scoring",
+      "XP rewards and leaderboard",
+    ],
+    skills: ["Incident Response", "Decision Making", "Command Line", "Threat Containment"],
+  },
   "Investigation Lab": {
     overview: "A professional-grade digital forensics workspace. Analyze disk images, memory dumps, network captures, and email artifacts with hex inspection, hash verification, and chain of custody tracking.",
     features: [
@@ -1161,38 +1259,16 @@ const MODULE_DETAILS: Record<string, { overview: string; features: string[]; ski
     ],
     skills: ["Attack Reconstruction", "Log Analysis", "Event Correlation", "Threat Hunting"],
   },
-  "Analyze Artifacts": {
-    overview: "Build visual relationship graphs connecting suspects, IP addresses, email accounts, domains, and malware hashes. Score threats and trace connections across the entire investigation.",
+  "Mission Control": {
+    overview: "Track your career progression as a cyber defender. View your rank, manage your current streak, and show off the badges you've earned across all academy lessons and investigations.",
     features: [
-      "Interactive relationship graphing",
-      "Entity mapping with type detection",
-      "Threat scoring (0–100)",
-      "Connection tracing across artifacts",
-      "Visual link analysis",
+      "Global leaderboard rankings",
+      "XP and level progression",
+      "Daily activity streaks",
+      "Achievement badge showcase",
+      "Performance analytics",
     ],
-    skills: ["OSINT", "Link Analysis", "Threat Intelligence", "Entity Resolution"],
-  },
-  "Simulation Runner": {
-    overview: "Face real-world attack scenarios in a gamified environment. Make critical decisions under pressure, execute commands in a live console, and earn XP based on your response effectiveness.",
-    features: [
-      "Live attack simulations",
-      "Decision-based gameplay with consequences",
-      "Real-time terminal console",
-      "Objective tracking and scoring",
-      "XP rewards and leaderboard",
-    ],
-    skills: ["Incident Response", "Decision Making", "Command Line", "Threat Containment"],
-  },
-  "Case Reports": {
-    overview: "Generate professional investigation reports with executive summaries, evidence appendices, impact analysis charts, and digital signatures. Export-ready for law enforcement and compliance.",
-    features: [
-      "Professional report generation",
-      "Executive summary builder",
-      "Evidence appendix with chain of custody",
-      "Impact-by-asset visualization",
-      "Digital signature and export",
-    ],
-    skills: ["Report Writing", "Executive Communication", "Compliance", "Documentation"],
+    skills: ["Continuous Learning", "Threat Intelligence", "Leadership", "Team Defense"],
   },
 };
 
@@ -1200,6 +1276,18 @@ function PlatformModules() {
   const [previewModule, setPreviewModule] = useState<string | null>(null);
 
   const modules = [
+    {
+      title: "Cyber Academy",
+      desc: "Learn cyber defense fundamentals",
+      icon: GraduationCap,
+      art: <IllusNetwork />,
+    },
+    {
+      title: "Simulation Lab",
+      desc: "Practice with live attack scenarios",
+      icon: Play,
+      art: <IllusPlay />,
+    },
     {
       title: "Investigation Lab",
       desc: "Analyze evidence in a professional lab",
@@ -1210,24 +1298,12 @@ function PlatformModules() {
       title: "Timeline View",
       desc: "Reconstruct every step of the attack",
       icon: Clock,
-      art: <IllusNetwork />,
-    },
-    {
-      title: "Analyze Artifacts",
-      desc: "Connect clues & build relationships",
-      icon: Search,
       art: <IllusDashboard />,
     },
     {
-      title: "Simulation Runner",
-      desc: "Hands-on attack simulations",
-      icon: Play,
-      art: <IllusPlay />,
-    },
-    {
-      title: "Case Reports",
-      desc: "Generate professional investigation reports",
-      icon: FileText,
+      title: "Mission Control",
+      desc: "Track XP, Rank, and Achievements",
+      icon: Trophy,
       art: <IllusReports />,
     },
   ];
@@ -1292,11 +1368,24 @@ function PlatformModules() {
   return (
     <section id="platform" className="relative px-4 sm:px-8 py-8 sm:py-12 scroll-mt-24">
       <div className="mx-auto max-w-[1400px]">
-        <Reveal>
-          <h2 className="font-display font-bold tracking-tight text-white text-2xl sm:text-3xl text-center">
-            Explore <span className="text-primary">ForenShield</span> Platform
-          </h2>
-        </Reveal>
+        <div className="flex flex-col items-center">
+          <Reveal>
+            <span className="inline-flex items-center gap-2 rounded-full glass px-3 py-1.5 text-[11px] font-mono mb-4">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inset-0 rounded-full bg-primary animate-ping opacity-75" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
+              </span>
+              <span className="tracking-[0.24em] uppercase text-primary">
+                Platform Capabilities
+              </span>
+            </span>
+          </Reveal>
+          <Reveal delay={60}>
+            <h2 className="font-display font-bold tracking-tight text-white text-2xl sm:text-3xl text-center">
+              Explore <span className="text-primary">ForenShield</span> Platform
+            </h2>
+          </Reveal>
+        </div>
 
         <div
           className="relative mt-8"
@@ -1305,14 +1394,14 @@ function PlatformModules() {
         >
           <button
             onClick={() => scroll(-1)}
-            className="absolute -left-2 sm:-left-4 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full glass-strong hover:bg-primary/20 hover:border-primary/40 hover:shadow-[0_0_20px_oklch(0.55_0.22_260/0.5)] transition-all flex items-center justify-center text-white active:scale-90"
+            className="absolute -left-2 sm:-left-4 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full glass-strong hover:bg-primary/20 hover:border-primary/50 hover:text-primary hover:shadow-[0_0_15px_var(--color-primary)] transition-all duration-[150ms] flex items-center justify-center text-white active:scale-90"
             aria-label="Scroll left"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
           <button
             onClick={() => scroll(1)}
-            className="absolute -right-2 sm:-right-4 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full glass-strong hover:bg-primary/20 hover:border-primary/40 hover:shadow-[0_0_20px_oklch(0.55_0.22_260/0.5)] transition-all flex items-center justify-center text-white active:scale-90"
+            className="absolute -right-2 sm:-right-4 top-1/2 -translate-y-1/2 z-10 h-10 w-10 rounded-full glass-strong hover:bg-primary/20 hover:border-primary/50 hover:text-primary hover:shadow-[0_0_15px_var(--color-primary)] transition-all duration-[150ms] flex items-center justify-center text-white active:scale-90"
             aria-label="Scroll right"
           >
             <ChevronRight className="h-5 w-5" />
@@ -1328,7 +1417,9 @@ function PlatformModules() {
             style={{ scrollbarWidth: "none", scrollBehavior: "smooth" }}
           >
             {modules.map((m, i) => (
-              <ModuleCard key={i} {...m} onPreview={() => setPreviewModule(m.title)} />
+              <Reveal key={i} delay={i * 100} className="snap-start shrink-0 flex">
+                <ModuleCard {...m} onPreview={() => setPreviewModule(m.title)} />
+              </Reveal>
             ))}
           </div>
         </div>
@@ -1383,7 +1474,7 @@ function ModuleCard({
       onClick={onPreview}
       onMouseMove={onMove}
       onMouseLeave={onLeave}
-      className="group relative snap-start shrink-0 w-[340px] sm:w-[400px] rounded-[20px] overflow-hidden border border-primary/15 bg-white/[0.02] hover:border-primary/50 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-[0_20px_60px_-15px_oklch(0.55_0.22_260/0.55),inset_0_1px_0_oklch(1_0_0/0.06)] shadow-[inset_0_1px_0_oklch(1_0_0/0.04)] transition-all duration-500 will-change-transform cursor-pointer"
+      className="group relative snap-start shrink-0 w-[340px] sm:w-[400px] rounded-[20px] overflow-hidden border border-primary/15 bg-white/[0.02] shadow-[inset_0_1px_0_oklch(1_0_0/0.04)] cursor-pointer transition-all duration-[250ms] ease-out will-change-transform hover:-translate-y-1.5 hover:scale-[1.02] hover:border-primary hover:shadow-[0_12px_30px_-10px_oklch(0.55_0.22_260/0.3),inset_0_1px_0_oklch(1_0_0/0.06)]"
       style={{
         transform:
           "perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg))",
@@ -2040,14 +2131,11 @@ function SpotlightRow() {
   return (
     <section id="about" className="relative px-4 sm:px-8 py-10 sm:py-16 scroll-mt-24">
       <div className="mx-auto max-w-[1400px] grid lg:grid-cols-12 gap-4 sm:gap-6">
-        <Reveal delay={0} className="lg:col-span-3">
+        <Reveal delay={0} className="lg:col-span-4">
           <CaseOfTheDay />
         </Reveal>
-        <Reveal delay={120} className="lg:col-span-6">
+        <Reveal delay={120} className="lg:col-span-8">
           <ThreatMap />
-        </Reveal>
-        <Reveal delay={220} className="lg:col-span-3">
-          <AcademyCard />
         </Reveal>
       </div>
     </section>
@@ -2058,7 +2146,7 @@ function CaseOfTheDay() {
   const [modalOpen, setModalOpen] = useState(false);
   return (
     <>
-    <div className="relative h-full rounded-[20px] overflow-hidden border border-primary/15 group transition-all duration-500 hover:-translate-y-2 hover:border-danger/50 hover:shadow-[0_25px_60px_-20px_oklch(0.65_0.24_25/0.55)]">
+    <div className="relative h-full rounded-[20px] overflow-hidden border border-primary/15 group transition-all duration-[250ms] ease-out hover:-translate-y-1.5 hover:scale-[1.02] hover:border-primary hover:shadow-[0_12px_30px_-10px_oklch(0.55_0.22_260/0.3)]">
       {/* Moody hero */}
       <div className="relative aspect-[4/3] overflow-hidden">
         {/* Base moody gradient */}
@@ -2069,12 +2157,12 @@ function CaseOfTheDay() {
               "radial-gradient(ellipse 90% 70% at 50% 100%, #3B0A0A 0%, #1A0510 35%, #0A0E1A 70%, #05070F 100%)",
           }}
         />
-        {/* Red ember glow behind figure */}
+        {/* Red glow behind figure */}
         <div
-          className="absolute inset-0"
+          className="absolute inset-0 motion-safe:animate-[pulse-glow_4s_ease-in-out_infinite]"
           style={{
             background:
-              "radial-gradient(ellipse 60% 45% at 50% 55%, oklch(0.55 0.22 25 / 0.55), transparent 65%)",
+              "radial-gradient(ellipse 60% 45% at 50% 55%, oklch(0.65 0.24 25 / 0.45), transparent 65%)",
           }}
         />
         {/* Grain / noise texture (SVG fractal, tiled) */}
@@ -2131,7 +2219,7 @@ function CaseOfTheDay() {
         {/* Scanline sweep */}
         <div
           aria-hidden
-          className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-danger/60 to-transparent animate-scan"
+          className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-danger/60 to-transparent motion-safe:animate-scan"
           style={{ top: 0 }}
         />
         {/* Bottom fade for text legibility */}
@@ -2142,10 +2230,10 @@ function CaseOfTheDay() {
         </span>
         {/* Animated warning indicator */}
         <div className="absolute top-3 right-3 h-8 w-8" aria-label="Warning">
-          <span className="absolute inset-0 rounded-full bg-danger/30 animate-ping-soft" />
-          <div className="relative h-8 w-8 rounded-full bg-danger/20 border border-danger/50 flex items-center justify-center shadow-[0_0_16px_oklch(0.65_0.24_25/0.5)] animate-pulse-glow">
+          <span className="absolute inset-0 rounded-full bg-danger/30 motion-safe:animate-[ping-soft_2s_ease-in-out_infinite]" />
+          <div className="relative h-8 w-8 rounded-full bg-danger/20 border border-danger/50 flex items-center justify-center shadow-[0_0_16px_oklch(0.65_0.24_25/0.5)] motion-safe:animate-[pulse-glow_2s_ease-in-out_infinite]">
             <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden>
-              <path d="M12 3L22 20H2L12 3Z" fill="#EF4444" />
+              <path d="M12 3L22 20H2L12 3Z" fill="var(--color-danger)" />
               <path d="M12 9v5" stroke="white" strokeWidth="2" strokeLinecap="round" />
               <circle cx="12" cy="18" r="1.5" fill="white" />
             </svg>
@@ -2161,13 +2249,13 @@ function CaseOfTheDay() {
           identify the mule account, and recover lost funds.
         </p>
         <div className="mt-3 flex flex-wrap gap-1.5">
-          <span className="rounded-md bg-warning/15 border border-warning/30 px-2 py-0.5 text-[10px] font-medium text-warning">
+          <span className="rounded-md bg-danger/15 border border-danger/30 px-2 py-0.5 text-[10px] font-medium text-danger">
             Medium
           </span>
           <span className="rounded-md bg-primary/15 border border-primary/30 px-2 py-0.5 text-[10px] font-medium text-primary">
             4 Evidence
           </span>
-          <span className="rounded-md bg-achievement/15 border border-achievement/30 px-2 py-0.5 text-[10px] font-medium text-achievement">
+          <span className="rounded-md bg-danger/15 border border-danger/30 px-2 py-0.5 text-[10px] font-medium text-danger">
             +250 XP
           </span>
         </div>
@@ -2230,13 +2318,14 @@ function CasePreviewModal({ open, onOpenChange }: { open: boolean; onOpenChange:
           <X className="h-4 w-4" />
         </button>
 
-        <div className="overflow-y-auto max-h-[92vh]">
+        <div className="overflow-y-auto max-h-[92vh] custom-scrollbar">
           {/* Header */}
           <div className="relative px-6 pt-6 pb-4 border-b border-white/5">
             <div className="flex items-center gap-2 text-[10px] font-mono tracking-[0.22em]">
-              <span className="inline-flex items-center gap-1 rounded-full bg-warning/15 border border-warning/30 px-2 py-0.5 text-warning">
+              <span className="inline-flex items-center gap-1 rounded-full bg-danger/15 border border-danger/30 px-2 py-0.5 text-danger">
                 <Eye className="h-2.5 w-2.5" /> FEATURED INVESTIGATION
               </span>
+              {/* TODO: Consider adding a distinct 'muted red' token if a 3-tier severity scale is reintroduced. For now, using standard danger red. */}
               <span className="inline-flex items-center gap-1 rounded-md border border-danger/40 bg-danger/10 px-1.5 py-0.5 text-danger">
                 <AlertTriangle className="h-2.5 w-2.5" /> MEDIUM
               </span>
@@ -2251,7 +2340,7 @@ function CasePreviewModal({ open, onOpenChange }: { open: boolean; onOpenChange:
             <div className="mt-3 flex flex-wrap gap-1.5">
               <span className="rounded-md bg-primary/15 border border-primary/30 px-2 py-0.5 text-[10px] font-medium text-primary">Financial Forensics</span>
               <span className="rounded-md bg-primary/15 border border-primary/30 px-2 py-0.5 text-[10px] font-medium text-primary">4 Evidence Files</span>
-              <span className="rounded-md bg-achievement/15 border border-achievement/30 px-2 py-0.5 text-[10px] font-medium text-achievement">+250 XP</span>
+              <span className="rounded-md bg-danger/15 border border-danger/30 px-2 py-0.5 text-[10px] font-medium text-danger">+250 XP</span>
             </div>
           </div>
 
@@ -2306,12 +2395,12 @@ function CasePreviewModal({ open, onOpenChange }: { open: boolean; onOpenChange:
                 {[
                   { time: "Day 1", label: "Initial Report Filed", tone: "text-primary" },
                   { time: "Day 1–2", label: "Evidence Collection & Preservation", tone: "text-primary" },
-                  { time: "Day 2–3", label: "Transaction Analysis & Tracing", tone: "text-warning" },
+                  { time: "Day 2–3", label: "Transaction Analysis & Tracing", tone: "text-danger" },
                   { time: "Day 3–4", label: "Suspect Identification & Reporting", tone: "text-danger" },
                 ].map((t, i) => (
                   <div key={i} className="relative">
                     <span className={`absolute -left-[13px] top-1 h-2.5 w-2.5 rounded-full border-2 border-background ${
-                      i === 3 ? "bg-danger" : i === 2 ? "bg-warning" : "bg-primary"
+                      i >= 2 ? "bg-danger" : "bg-primary"
                     }`} />
                     <div className="text-[9px] font-mono text-muted-foreground">{t.time}</div>
                     <div className={`text-[12px] font-medium ${t.tone}`}>{t.label}</div>
@@ -2323,12 +2412,12 @@ function CasePreviewModal({ open, onOpenChange }: { open: boolean; onOpenChange:
             {/* Threat Summary */}
             <div>
               <div className="flex items-center gap-2 text-[11px] font-mono tracking-[0.18em] text-muted-foreground uppercase">
-                <AlertTriangle className="h-3.5 w-3.5 text-warning" /> Threat Summary
+                <AlertTriangle className="h-3.5 w-3.5 text-danger" /> Threat Summary
               </div>
-              <div className="mt-2 rounded-lg border border-warning/20 bg-warning/[0.04] px-4 py-3">
+              <div className="mt-2 rounded-lg border border-danger/20 bg-danger/[0.04] px-4 py-3">
                 <div className="text-sm text-white/90 font-medium">Financial fraud via UPI credential theft</div>
                 <div className="mt-1 flex flex-wrap gap-3 text-[10px] font-mono text-muted-foreground">
-                  <span>Severity: <span className="text-warning">Medium</span></span>
+                  <span>Severity: <span className="text-danger">Medium</span></span>
                   <span>Category: <span className="text-white/80">Financial Crime</span></span>
                   <span>Vector: <span className="text-white/80">Social Engineering</span></span>
                 </div>
@@ -2384,6 +2473,147 @@ function CasePreviewModal({ open, onOpenChange }: { open: boolean; onOpenChange:
               </a>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* =============================================================
+   CURRICULUM MODAL
+   ============================================================= */
+function CurriculumModal({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+  if (!open) return null;
+
+  const handleDownload = (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    onOpenChange(false);
+    const target = document.querySelector("#download");
+    if (target) {
+      const top = target.getBoundingClientRect().top + window.scrollY - 80;
+      window.scrollTo({ top, behavior: "smooth" });
+    }
+  };
+
+  const ALL_COURSES = [
+    { icon: Wifi, name: "Networking Basics", progress: 75, xp: 1240, tone: "primary", modules: 8 },
+    { icon: Shield, name: "Web Security", progress: 60, xp: 980, tone: "success", modules: 6 },
+    { icon: AlertTriangle, name: "Linux Essentials", progress: 40, xp: 620, tone: "warning", modules: 5 },
+    { icon: Lock, name: "Cryptography Basics", progress: 0, xp: 850, tone: "primary", modules: 4 },
+    { icon: Mail, name: "Social Engineering & Phishing", progress: 0, xp: 750, tone: "warning", modules: 5 },
+    { icon: Bug, name: "Malware Analysis Fundamentals", progress: 0, xp: 1100, tone: "danger", modules: 7 },
+    { icon: Zap, name: "Incident Response", progress: 0, xp: 920, tone: "primary", modules: 6 },
+    { icon: Globe, name: "Cloud Security Basics", progress: 0, xp: 1050, tone: "success", modules: 5 },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-background/80 backdrop-blur-md"
+        onClick={() => onOpenChange(false)}
+        style={{ animation: "fade-up 0.3s ease" }}
+      />
+      {/* Modal */}
+      <div
+        className="relative w-[min(96vw,560px)] max-h-[92vh] overflow-hidden rounded-2xl border border-white/10 shadow-elevated flex flex-col"
+        style={{
+          background: "rgba(11,18,32,0.95)",
+          backdropFilter: "blur(24px) saturate(140%)",
+          WebkitBackdropFilter: "blur(24px) saturate(140%)",
+          animation: "fade-up 0.4s cubic-bezier(0.16,1,0.3,1)",
+        }}
+      >
+        {/* Close */}
+        <button
+          onClick={() => onOpenChange(false)}
+          className="absolute top-4 right-4 z-30 h-9 w-9 rounded-lg border border-white/10 bg-white/[0.04] flex items-center justify-center text-muted-foreground hover:text-white hover:border-primary/40 transition"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
+        {/* Header */}
+        <div className="relative px-6 pt-6 pb-4 border-b border-white/5 shrink-0">
+          <div className="flex items-center gap-2">
+            <GraduationCap className="h-5 w-5 text-primary" />
+            <h3 className="font-display font-bold text-white text-2xl tracking-tight">
+              Cyber Academy Curriculum
+            </h3>
+          </div>
+          <div className="mt-3 flex items-center gap-2">
+            <span className="inline-flex items-center gap-1 rounded-full bg-achievement/15 border border-achievement/30 px-2 py-0.5 text-[10px] font-mono text-achievement">
+              <BookOpen className="h-2.5 w-2.5" /> 8 MODULES
+            </span>
+          </div>
+          <p className="mt-2 text-sm text-muted-foreground leading-relaxed max-w-lg">
+            Master the fundamentals of Cyber Defense. Below is the complete learning path required to unlock advanced simulations.
+          </p>
+        </div>
+
+        {/* Scrollable list */}
+        <div className="overflow-y-auto max-h-[50vh] custom-scrollbar p-6 space-y-3">
+          {ALL_COURSES.map((c, i) => {
+            const Icon = c.icon;
+            const toneCls: Record<string, string> = {
+              primary: "text-primary bg-primary/15 border-primary/30",
+              success: "text-success bg-success/15 border-success/30",
+              warning: "text-warning bg-warning/15 border-warning/30",
+              danger: "text-danger bg-danger/15 border-danger/30",
+            };
+            const barCls: Record<string, string> = {
+              primary: "from-primary to-secondary",
+              success: "from-success to-primary",
+              warning: "from-warning to-danger",
+              danger: "from-danger to-warning",
+            };
+            return (
+              <div
+                key={i}
+                className="rounded-xl border border-white/5 bg-white/[0.02] p-3 hover:bg-white/[0.04] transition-colors cursor-default group"
+                style={{ animation: `fade-up 0.4s ${i * 50}ms both` }}
+              >
+                <div className="flex items-center gap-3">
+                  <span className={`h-10 w-10 shrink-0 rounded-lg border flex items-center justify-center ${toneCls[c.tone]}`}>
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between">
+                      <div className="text-[13px] text-white font-medium truncate group-hover:text-white">{c.name}</div>
+                      <span className="text-[10px] font-mono text-achievement">+{c.xp} XP</span>
+                    </div>
+                    <div className="mt-1 flex items-center justify-between text-[10px] text-muted-foreground font-mono">
+                      <span>{c.modules} Modules</span>
+                      <span className="text-white/80">{c.progress}%</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-2.5 h-1.5 rounded-full bg-white/5 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full bg-gradient-to-r ${barCls[c.tone]}`}
+                    style={{
+                      width: `${c.progress}%`,
+                      animation: c.progress > 0 ? "shimmer 3s linear infinite" : "none",
+                      backgroundSize: "200% 100%",
+                    }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Footer CTA */}
+        <div className="px-6 py-4 border-t border-white/5 bg-white/[0.02] shrink-0">
+          <button
+            onClick={handleDownload}
+            className="w-full relative inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white bg-primary transition-[transform,box-shadow] duration-300 will-change-transform hover:shadow-[0_10px_40px_-8px_oklch(0.55_0.22_260/0.75)]"
+          >
+            <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary to-secondary opacity-0 hover:opacity-100 transition-opacity duration-300" />
+            <span className="relative inline-flex items-center gap-2">
+              <GraduationCap className="h-4 w-4" />
+              Start Learning
+            </span>
+          </button>
         </div>
       </div>
     </div>
@@ -2547,17 +2777,21 @@ function ThreatMap() {
 }
 
 function AcademyCard() {
+  const [modalOpen, setModalOpen] = useState(false);
+  /* NOTE: Amber/gold accents in this card are a deliberate exception to the site's blue-only palette. Do not "correct" to primary blue. */
   const courses = [
     { icon: Wifi, name: "Networking Basics", progress: 75, xp: 1240, tone: "primary" },
     { icon: Shield, name: "Web Security", progress: 60, xp: 980, tone: "success" },
     { icon: AlertTriangle, name: "Linux Essentials", progress: 40, xp: 620, tone: "warning" },
   ];
   return (
+    <>
     <div className="relative h-full rounded-2xl overflow-hidden border border-white/[0.08] bg-gradient-to-br from-[oklch(0.16_0.03_260)] to-[oklch(0.10_0.02_260)] p-8 flex flex-col">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <GraduationCap className="h-5 w-5 text-primary" />
-          <span className="text-white font-display font-bold text-lg">Cyber Academy</span>
+        <div className="relative flex items-center gap-2">
+          <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full" />
+          <GraduationCap className="h-5 w-5 text-primary relative z-10" />
+          <span className="text-white font-display font-bold text-lg relative z-10">Cyber Academy</span>
         </div>
         <span className="inline-flex items-center gap-1 rounded-full bg-achievement/15 border border-achievement/30 px-2 py-0.5 text-[10px] font-mono text-achievement">
           <BookOpen className="h-2.5 w-2.5" /> 8 MODULES
@@ -2598,7 +2832,7 @@ function AcademyCard() {
           return (
             <div
               key={i}
-              className="rounded-xl border border-white/5 bg-white/[0.02] p-2.5"
+              className="rounded-xl border border-white/5 bg-white/[0.02] p-2.5 hover:bg-white/[0.04] transition-colors cursor-default group"
               style={{ animation: `fade-up 0.6s ${i * 120}ms both` }}
             >
               <div className="flex items-center gap-2">
@@ -2607,7 +2841,7 @@ function AcademyCard() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between">
-                    <div className="text-[12px] text-white font-medium truncate">{c.name}</div>
+                    <div className="text-[12px] text-white font-medium truncate group-hover:text-white">{c.name}</div>
                     <span className="text-[9px] font-mono text-achievement">+{c.xp} XP</span>
                   </div>
                   <div className="mt-0.5 flex items-center justify-between text-[9px] text-muted-foreground font-mono">
@@ -2647,20 +2881,530 @@ function AcademyCard() {
             return (
               <g key={i}>
                 {prev && <line x1={prev.x} y1={prev.y} x2={n.x} y2={n.y} stroke={n.u ? "#3B82F6" : "oklch(1 0 0 / 0.15)"} strokeWidth="0.8" strokeDasharray={n.u ? "0" : "2 2"} />}
-                <circle cx={n.x} cy={n.y} r="3.5" fill={n.u ? "#3B82F6" : "oklch(0.20 0.03 260)"} stroke={n.u ? "#22D3EE" : "oklch(1 0 0 / 0.2)"} strokeWidth="0.8" className={n.u ? "animate-pulse-glow" : ""} style={{ animationDelay: `${i * 0.15}s` }} />
+                <circle cx={n.x} cy={n.y} r="3.5" fill={n.u ? "#3B82F6" : "oklch(0.20 0.03 260)"} stroke={n.u ? "#22D3EE" : "oklch(1 0 0 / 0.2)"} strokeWidth="0.8" className={n.u ? "drop-shadow-[0_0_4px_rgba(59,130,246,0.5)] animate-pulse-glow" : ""} style={{ animationDelay: `${i * 0.15}s` }} />
               </g>
             );
           })}
         </svg>
       </div>
 
-      <a
-        href="#features"
-        className="mt-3 inline-flex items-center gap-1.5 text-primary text-sm font-medium hover:gap-2.5 transition-all"
+      <button
+        onClick={() => setModalOpen(true)}
+        className="mt-3 inline-flex items-center gap-1.5 text-primary text-sm font-medium hover:gap-2.5 transition-all outline-none"
       >
         View Curriculum <ArrowRight className="h-3.5 w-3.5" />
-      </a>
+      </button>
     </div>
+    <CurriculumModal open={modalOpen} onOpenChange={setModalOpen} />
+    </>
+  );
+}
+
+/* =============================================================
+   NEW SECTIONS
+   ============================================================= */
+function CyberAcademySection() {
+  return (
+    <section className="relative px-4 sm:px-8 py-24 scroll-mt-24 bg-surface/30">
+      <div className="mx-auto max-w-[1200px] flex flex-col lg:flex-row items-center gap-12 lg:gap-24">
+        {/* Text Left */}
+        <div className="flex-1 space-y-6">
+          <Reveal>
+            <div className="inline-flex items-center gap-2 rounded-full glass px-3 py-1.5 text-[11px] font-mono mb-2">
+              <span className="tracking-[0.24em] uppercase text-primary">Cyber Academy</span>
+            </div>
+            <h2 className="font-display font-bold tracking-tight text-white text-3xl sm:text-4xl">
+              Master the fundamentals <br/>
+              of <span className="text-primary text-glow-cyan">Cyber Defense</span>
+            </h2>
+            <p className="text-muted-foreground text-lg leading-relaxed mt-4">
+              Before you face live attacks, build your foundational knowledge through interactive, scenario-based learning modules. Learn networking basics, web security, cryptography, and linux essentials.
+            </p>
+          </Reveal>
+          <Reveal delay={100}>
+            <ul className="space-y-3 mt-6">
+              {[
+                "Interactive learning modules with knowledge checks",
+                "Progress tracking and certifications",
+                "Hands-on command line fundamentals",
+              ].map((item, i) => (
+                <li key={i} className="flex items-start gap-3 text-white/80">
+                  <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+            
+            <div className="mt-6 inline-flex items-center gap-2 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2 text-xs text-muted-foreground">
+              <span className="relative flex h-2 w-2 mr-1">
+                <span className="animate-ping-soft absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
+              </span>
+              <span className="text-white font-medium">10,000+</span> learners already started
+            </div>
+
+            <div className="mt-8">
+              <MagneticButton href="#download" className="!px-6 !py-3">
+                <GraduationCap className="h-4 w-4" /> Start Learning
+              </MagneticButton>
+            </div>
+          </Reveal>
+        </div>
+        
+        {/* Visual Right (Reusing AcademyCard) */}
+        <div className="flex-1 w-full lg:max-w-[500px]">
+          <Reveal delay={200}>
+            <AcademyCard />
+          </Reveal>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SimulationLabSection() {
+  const sims = [
+    { title: "Phishing Analysis", desc: "Spot fake emails and domains before they compromise the network.", icon: Mail, tone: "primary", xp: "+100 XP" },
+    { title: "QR Code Scams", desc: "Analyze malicious QR codes used in modern physical-to-digital attacks.", icon: QrCode, tone: "danger", xp: "+150 XP" },
+    { title: "OTP Fraud", desc: "Intercept and identify account takeover attempts via SMS spoofing.", icon: Smartphone, tone: "primary", xp: "+200 XP" },
+    { title: "Fake Shopping", desc: "Investigate fraudulent e-commerce domains stealing credentials.", icon: ShoppingCart, tone: "danger", xp: "+250 XP" },
+  ];
+  return (
+    <section className="relative px-4 sm:px-8 py-24 scroll-mt-24">
+      <div className="mx-auto max-w-[1200px]">
+        <Reveal>
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 rounded-full glass px-3 py-1.5 text-[11px] font-mono mb-4">
+              <span className="tracking-[0.24em] uppercase text-danger">Simulation Lab</span>
+            </div>
+            <h2 className="font-display font-bold tracking-tight text-white text-3xl sm:text-4xl">
+              Practice in <span className="text-danger">Live Attack Scenarios</span>
+            </h2>
+            <p className="mt-4 text-muted-foreground max-w-xl mx-auto text-lg">
+              Face real-world threats in a safe, gamified environment. Make critical decisions under pressure and see the consequences of your actions.
+            </p>
+          </div>
+        </Reveal>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {sims.map((sim, i) => {
+            const Icon = sim.icon;
+            
+            // Map the accent tones for the outer card border & hover shadow
+            const cardToneCls: Record<string, string> = {
+              primary: "border-primary/20 hover:border-primary/50 hover:shadow-[0_12px_30px_-10px_oklch(0.55_0.22_260/0.35)]",
+              danger: "border-danger/20 hover:border-danger/50 hover:shadow-[0_12px_30px_-10px_oklch(0.65_0.24_25/0.35)]",
+            };
+
+            // Map the accent tones for the inner icon badge
+            const badgeCls: Record<string, string> = {
+              primary: "text-primary border-primary/30 bg-primary/10 shadow-[0_0_15px_oklch(0.55_0.22_260/0.35)] group-hover:border-primary/50 group-hover:bg-primary/20 group-hover:shadow-[0_0_25px_oklch(0.55_0.22_260/0.6)]",
+              danger: "text-danger border-danger/30 bg-danger/10 shadow-[0_0_15px_oklch(0.65_0.24_25/0.35)] group-hover:border-danger/50 group-hover:bg-danger/20 group-hover:shadow-[0_0_25px_oklch(0.65_0.24_25/0.6)]",
+            };
+
+            return (
+              <Reveal key={i} delay={i * 100}>
+                <div className={`p-6 rounded-2xl border bg-white/[0.02] bg-gradient-to-b from-white/[0.06] to-transparent transition-all duration-300 ease-out hover:-translate-y-2 h-full flex flex-col group cursor-default ${cardToneCls[sim.tone]}`}>
+                  <div className={`h-14 w-14 rounded-xl border flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300 motion-safe:animate-[pulse-glow_4s_ease-in-out_infinite] ${badgeCls[sim.tone]}`}>
+                    <Icon className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-white font-bold text-lg mb-2">{sim.title}</h3>
+                  <p className="text-muted-foreground text-sm flex-1">{sim.desc}</p>
+                  
+                  {/* Gamification bottom anchor */}
+                  <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between">
+                    <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">Reward</span>
+                    <span className="rounded-md bg-achievement/15 border border-achievement/30 px-2 py-0.5 text-[10px] font-medium text-achievement">
+                      {sim.xp}
+                    </span>
+                  </div>
+                </div>
+              </Reveal>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function MissionControlSection() {
+  return (
+    <section className="relative px-4 sm:px-8 py-24 scroll-mt-24 bg-surface/30">
+      <div className="mx-auto max-w-[1200px] flex flex-col md:flex-row-reverse items-center gap-12 lg:gap-24">
+        {/* Text Right */}
+        <div className="flex-1 space-y-6">
+          <Reveal>
+            <div className="inline-flex items-center gap-2 rounded-full glass px-3 py-1.5 text-[11px] font-mono mb-2">
+              <span className="tracking-[0.24em] uppercase text-primary">Mission Control</span>
+            </div>
+            <h2 className="font-display font-bold tracking-tight text-white text-3xl sm:text-4xl">
+              Level up your <br/>
+              <span className="text-primary text-glow-cyan">Cyber Career</span>
+            </h2>
+            <p className="text-muted-foreground text-lg leading-relaxed mt-4">
+              Every lesson, simulation, and case you solve earns XP. Level up your rank, maintain your daily streak, and unlock exclusive achievement badges as you master cyber defense.
+            </p>
+          </Reveal>
+        </div>
+        
+        {/* Visual Left */}
+        <div className="flex-1 w-full lg:max-w-[450px]">
+          <Reveal delay={200}>
+            <div className="relative p-8 rounded-3xl border border-white/10 bg-[oklch(0.12_0.025_260)] shadow-elevated overflow-hidden">
+              <div className="absolute inset-0 grid-bg opacity-10" />
+              <div className="relative flex flex-col items-center text-center">
+                <div className="relative">
+                  <div className="h-24 w-24 rounded-full bg-primary/10 border-4 border-primary/30 flex items-center justify-center relative z-10">
+                    <Trophy className="h-10 w-10 text-primary" />
+                  </div>
+                  <div className="absolute inset-0 rounded-full border border-primary animate-ping opacity-50" />
+                </div>
+                <h3 className="text-white font-bold text-xl mt-4">Senior Analyst</h3>
+                <div className="text-sm text-muted-foreground font-mono mt-1">Level 42</div>
+                
+                <div className="w-full mt-8">
+                  <div className="flex justify-between text-[10px] font-mono text-muted-foreground mb-2">
+                    <span>12,400 XP</span>
+                    <span>15,000 XP to Level 43</span>
+                  </div>
+                  <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden">
+                    <div className="h-full w-[82%] bg-gradient-to-r from-primary to-secondary rounded-full" />
+                  </div>
+                </div>
+                
+                <div className="w-full mt-8 pt-6 border-t border-white/5">
+                  <div className="text-[10px] font-mono text-muted-foreground text-left mb-3">RECENT BADGES</div>
+                  <div className="flex items-center gap-2">
+                    {[Award, Shield, Terminal, Zap].map((BIcon, i) => (
+                      <div key={i} className="h-12 w-12 rounded-xl bg-primary/5 border border-primary/20 flex items-center justify-center text-primary/80 hover:bg-primary/15 hover:border-primary/40 hover:text-primary hover:scale-105 hover:shadow-[0_0_12px_oklch(0.55_0.22_260/0.4)] transition-all cursor-default">
+                        <BIcon className="h-5 w-5" />
+                      </div>
+                    ))}
+                    <div className="ml-1 text-[10px] text-muted-foreground font-mono tracking-wider">+12 more</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* =============================================================
+   DEVICE SHOWCASE
+   ============================================================= */
+function DeviceShowcase() {
+  const screens = [
+    { id: "dashboard", component: <MissionControlScreen /> },
+    { id: "investigation", component: <CaseDetailsScreen /> },
+    { id: "evidence", component: <EvidenceBoardScreen /> },
+    { id: "timeline", component: <TimelineScreen /> },
+    { id: "report", component: <ReportsScreen /> },
+    { id: "learning", component: <AcademyScreen /> },
+    { id: "profile", component: <ProfileScreen /> },
+    { id: "dashboard_dup", component: <MissionControlScreen /> }
+  ];
+
+  return (
+    <section className="relative px-4 sm:px-8 py-24 scroll-mt-24">
+      <div className="mx-auto max-w-[1400px]">
+        <div className="text-center mb-16">
+          <Reveal>
+            <h2 className="font-display font-bold tracking-tight text-white text-3xl sm:text-4xl">
+              Experience the <span className="text-primary text-glow-cyan">Platform</span>
+            </h2>
+          </Reveal>
+          <Reveal delay={100}>
+            <p className="mt-4 text-muted-foreground max-w-xl mx-auto">
+              A comprehensive toolkit for modern digital forensics.
+            </p>
+          </Reveal>
+        </div>
+
+        <div className="relative mx-auto w-[320px] h-[650px] sm:w-[360px] sm:h-[720px] rounded-[44px] border-[12px] border-black bg-black shadow-[0_30px_80px_-20px_oklch(0.55_0.22_260/0.4)] overflow-hidden group">
+          {/* Dynamic Notch */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120px] h-7 bg-black rounded-b-2xl z-20" />
+          
+          {/* Scroll Container */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="w-[360px] h-[800%] flex flex-col animate-phone-scroll group-hover:[animation-play-state:paused] focus-within:[animation-play-state:paused] origin-top-left scale-[0.835] sm:scale-100 transition-transform">
+              {screens.map((screen, i) => (
+                <div key={`${screen.id}-${i}`} className="w-full h-[12.5%] relative overflow-hidden">
+                  {screen.component}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function WorkflowStory() {
+  const steps = [
+    { id: 1, title: "Incident Received", desc: "A new suspicious activity alert triggers an investigation protocol. Review the initial threat intelligence and scope the incident.", component: <MissionControlScreen /> },
+    { id: 2, title: "Evidence Collected", desc: "Gather critical artifacts from the simulated environment, including network logs, memory dumps, and file system snapshots.", component: <EvidenceBoardScreen /> },
+    { id: 3, title: "Analysis in Progress", desc: "Correlate collected data points. Identify the attack vector and trace the adversary's lateral movement.", component: <CaseDetailsScreen /> },
+    { id: 4, title: "Timeline Built", desc: "Construct a chronological sequence of events. Map findings directly to MITRE ATT&CK tactics and techniques.", component: <TimelineScreen /> },
+    { id: 5, title: "Report Generated", desc: "Compile findings into a professional-grade forensic report, complete with executive summaries and technical details.", component: <ReportsScreen /> },
+  ];
+
+  return (
+    <section className="relative px-4 sm:px-8 py-24">
+      <div className="mx-auto max-w-[1200px]">
+        <Reveal>
+          <div className="text-center mb-24">
+            <h2 className="font-display font-bold tracking-tight text-white text-3xl sm:text-4xl">
+              From Alert to <span className="text-primary text-glow-cyan">Resolution</span>
+            </h2>
+            <p className="mt-4 text-muted-foreground max-w-xl mx-auto">
+              Follow a concrete investigation workflow end-to-end.
+            </p>
+          </div>
+        </Reveal>
+
+        <div className="space-y-32">
+          {steps.map((step, index) => {
+            const isEven = index % 2 === 0;
+            return (
+              <div key={step.id} className={`flex flex-col md:flex-row items-center gap-12 lg:gap-24 ${isEven ? "" : "md:flex-row-reverse"}`}>
+                {/* Image / Mockup */}
+                <div className="flex-1 w-full">
+                  <Reveal delay={100}>
+                    <div className="relative aspect-[4/3] rounded-2xl glass flex flex-col items-center justify-center p-8 overflow-hidden group hover:border-primary transition-all duration-[250ms] ease-out hover:-translate-y-1.5 hover:shadow-[0_12px_30px_-10px_oklch(0.55_0.22_260/0.3)] hover:scale-[1.02]">
+                      <div className="absolute inset-0 grid-bg opacity-20" />
+                      
+                      {/* Scaled Mockup Render */}
+                      <div className="w-[360px] h-[780px] origin-center scale-[0.4] sm:scale-[0.45] md:scale-[0.4] lg:scale-[0.5] shadow-2xl rounded-[40px] pointer-events-none group-hover:pointer-events-auto">
+                        {step.component}
+                      </div>
+                    </div>
+                  </Reveal>
+                </div>
+                {/* Text */}
+                <div className="flex-1 w-full space-y-4">
+                  <Reveal delay={200}>
+                    <div className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-primary/20 text-primary font-mono text-xs font-bold border border-primary/40 shadow-[0_0_12px_oklch(0.55_0.22_260/0.4)]">
+                      0{step.id}
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl font-display font-bold text-white mt-4">{step.title}</h3>
+                    <p className="text-muted-foreground leading-relaxed mt-4 text-lg">{step.desc}</p>
+                  </Reveal>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TrustCredibility() {
+  return (
+    <>
+      <Testimonials />
+      <Faq />
+    </>
+  );
+}
+
+function FeaturesComparison() {
+  const rows = [
+    { feature: "Simulated Environments", us: "Hands-on, Real Tools", them: "Abstract Theory" },
+    { feature: "Case Data", us: "Real-world Artifacts", them: "Sanitized Examples" },
+    { feature: "Progress Tracking", us: "Granular Skill Trees", them: "Completion Certificates" },
+    { feature: "Community Support", us: "Active Discord & Mentors", them: "Static Forums" },
+  ];
+
+  return (
+    <section className="relative px-4 sm:px-8 py-20">
+      <div className="mx-auto max-w-[900px]">
+        <Reveal>
+          <div className="text-center mb-10">
+            <h2 className="font-display font-bold tracking-tight text-white text-3xl">
+              Why <span className="text-primary text-glow-cyan">ForenShield?</span>
+            </h2>
+          </div>
+        </Reveal>
+        <Reveal delay={100}>
+          {/* Header Row (Desktop Only) */}
+          <div className="hidden sm:grid sm:grid-cols-[1.5fr_1fr_1fr] gap-4 px-6 pb-4 font-mono text-[10px] sm:text-xs tracking-wider text-muted-foreground/70 uppercase">
+            <div>Capability</div>
+            <div>ForenShield</div>
+            <div>Traditional Training</div>
+          </div>
+          
+          {/* Row Cards */}
+          <div className="space-y-3">
+            {rows.map((r, i) => (
+              <div 
+                key={i} 
+                className="grid grid-cols-1 sm:grid-cols-[1.5fr_1fr_1fr] gap-3 sm:gap-4 p-5 sm:px-6 sm:py-4 rounded-2xl glass border border-white/5 hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_8px_25px_-10px_oklch(0.55_0.22_260/0.25)] transition-all duration-[200ms] ease-out items-start sm:items-center group"
+              >
+                {/* Capability */}
+                <div>
+                  <div className="sm:hidden font-mono text-[10px] tracking-wider text-muted-foreground/70 uppercase mb-1.5">Capability</div>
+                  <div className="text-white font-bold text-sm sm:text-base">{r.feature}</div>
+                </div>
+                
+                {/* ForenShield */}
+                <div>
+                  <div className="sm:hidden font-mono text-[10px] tracking-wider text-muted-foreground/70 uppercase mb-2 mt-4">ForenShield</div>
+                  <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary font-bold text-xs sm:text-sm group-hover:bg-primary/15 transition-colors">
+                    <CheckCircle2 className="h-4 w-4 shrink-0" /> {r.us}
+                  </div>
+                </div>
+                
+                {/* Traditional */}
+                <div>
+                  <div className="sm:hidden font-mono text-[10px] tracking-wider text-muted-foreground/70 uppercase mb-2 mt-4">Traditional Training</div>
+                  <div className="flex items-center gap-1.5 sm:gap-2 text-muted-foreground/50 font-medium text-xs sm:text-sm">
+                    <X className="h-4 w-4 shrink-0 opacity-40" /> {r.them}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
+function Roadmap() {
+  const items = [
+    { status: "live", q: "Q1 2026", title: "Core Platform Launch", desc: "Initial release of investigation dashboard and 3 core cases." },
+    { status: "live", q: "Q2 2026", title: "Mobile App Beta", desc: "Android APK available for mobile learning and on-the-go analysis." },
+    { status: "planned", q: "Q3 2026", title: "Advanced Simulations", desc: "Multi-player incident response scenarios." },
+    { status: "planned", q: "Q4 2026", title: "iOS Release & Web Platform", desc: "Full cross-platform availability." },
+  ];
+  return (
+    <section className="relative px-4 sm:px-8 py-24 bg-surface/30">
+      <div className="mx-auto max-w-[800px]">
+        <Reveal>
+          <div className="text-center mb-16">
+            <h2 className="font-display font-bold tracking-tight text-white text-3xl">Platform Roadmap</h2>
+          </div>
+        </Reveal>
+        <div className="relative space-y-8 before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-white/10 before:to-transparent">
+          {items.map((item, i) => (
+            <Reveal key={i} delay={i * 100}>
+              <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                {/* Marker */}
+                <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-[oklch(0.14_0.028_260)] bg-surface md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-[0_0_0_1px_oklch(1_0_0/0.1)] relative z-10 shrink-0">
+                  <div className={`w-2.5 h-2.5 rounded-full ${item.status === 'live' ? 'bg-primary animate-pulse-glow shadow-[0_0_8px_oklch(0.55_0.22_260)]' : 'bg-white/20'}`} />
+                </div>
+                {/* Card */}
+                <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-6 rounded-2xl glass hover:-translate-y-1.5 hover:scale-[1.02] hover:border-primary hover:shadow-[0_12px_30px_-10px_oklch(0.55_0.22_260/0.3)] transition-all duration-[250ms] ease-out">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-mono tracking-widest text-primary uppercase">{item.q}</span>
+                    <span className={`text-[9px] px-2 py-0.5 rounded-full font-mono uppercase ${item.status === 'live' ? 'bg-primary/10 text-primary border border-primary/20' : 'bg-white/5 text-muted-foreground border border-white/10'}`}>
+                      {item.status}
+                    </span>
+                  </div>
+                  <h3 className="text-white font-bold text-lg mb-1">{item.title}</h3>
+                  <p className="text-muted-foreground text-sm">{item.desc}</p>
+                </div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Testimonials() {
+  return (
+    <section className="relative px-4 sm:px-8 py-24">
+      <div className="mx-auto max-w-[1400px]">
+        <Reveal>
+          <div className="text-center mb-16">
+            <h2 className="font-display font-bold tracking-tight text-white text-3xl">Community Trust</h2>
+          </div>
+        </Reveal>
+        <div className="grid md:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <Reveal key={i} delay={i * 100}>
+              <div className="p-8 rounded-2xl glass flex flex-col h-full hover:-translate-y-1.5 hover:scale-[1.02] hover:border-primary hover:shadow-[0_12px_30px_-10px_oklch(0.55_0.22_260/0.3)] transition-all duration-[250ms] ease-out">
+                <div className="flex gap-1 mb-6 text-primary">
+                  {[1,2,3,4,5].map(s => <Star key={s} className="h-4 w-4 fill-current" />)}
+                </div>
+                <p className="text-white/90 text-sm leading-relaxed flex-1 italic">
+                  "Placeholder testimonial — replace with real user quote once community feedback is collected. This slot is reserved for social proof."
+                </p>
+                <div className="mt-6 flex items-center gap-3 border-t border-white/5 pt-4">
+                  <div className="h-10 w-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-muted-foreground shrink-0">
+                    <User className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-white font-medium text-sm truncate">Placeholder Name</div>
+                    <div className="text-muted-foreground text-xs truncate">Security Analyst Role</div>
+                  </div>
+                </div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Faq() {
+  const faqs = [
+    { q: "What is ForenShield?", a: "ForenShield is an interactive cybersecurity training platform focused on digital forensics and incident response. It provides hands-on cases with real-world simulated evidence." },
+    { q: "Is the platform free?", a: "The core platform and initial cases are free. Premium modules and advanced enterprise features may require a subscription in the future." },
+    { q: "What skill level is required?", a: "Cases range from beginner to advanced. We recommend basic networking and IT knowledge, but our learning modules guide you through complex forensic concepts." },
+    { q: "Are the certificates valid for CPE credits?", a: "Our certificates prove completion of rigorous, practical challenges. We are working on official CPE accreditation with major security organizations." },
+    { q: "Can I use the app offline?", a: "Certain learning modules and static evidence files can be cached offline, but full investigation simulations require an active connection." },
+  ];
+
+  return (
+    <section className="relative px-4 sm:px-8 py-24 bg-surface/30">
+      <div className="mx-auto max-w-[800px]">
+        <Reveal>
+          <div className="text-center mb-12">
+            <h2 className="font-display font-bold tracking-tight text-white text-3xl">Frequently Asked Questions</h2>
+          </div>
+        </Reveal>
+        <div className="space-y-4">
+          {faqs.map((faq, i) => (
+            <FaqItem key={i} question={faq.q} answer={faq.a} index={i} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FaqItem({ question, answer, index }: { question: string, answer: string, index: number }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Reveal delay={index * 50}>
+      <div className="rounded-2xl glass border border-white/10 overflow-hidden">
+        <button
+          onClick={() => setOpen(!open)}
+          className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-white/5 transition-colors focus:outline-none focus-visible:bg-white/5"
+          aria-expanded={open}
+        >
+          <span className="text-white font-medium pr-4">{question}</span>
+          <ChevronDown className={`h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-[250ms] ease-out ${open ? "rotate-180" : ""}`} />
+        </button>
+        <div className={`accordion-content ${open ? "accordion-content-open" : ""}`}>
+          <div className="accordion-inner">
+            <div className="px-6 pb-5 text-muted-foreground text-sm leading-relaxed border-t border-white/5 pt-4 mx-2">
+              {answer}
+            </div>
+          </div>
+        </div>
+      </div>
+    </Reveal>
   );
 }
 
@@ -2685,36 +3429,36 @@ function FinalCTA() {
             {Array.from({ length: 20 }).map((_, i) => (
               <span
                 key={i}
-                className="absolute h-1 w-1 rounded-full bg-primary animate-float"
+                className="absolute h-1 w-1 rounded-full bg-primary animate-drift-twinkle"
                 style={{
                   top: `${(i * 41) % 100}%`,
                   left: `${(i * 29) % 100}%`,
-                  opacity: 0.5,
                   boxShadow: "0 0 10px currentColor",
-                  animationDuration: `${5 + (i % 4)}s`,
-                  animationDelay: `${(i % 5) * 0.3}s`,
+                  animationDuration: `${4 + (i % 3)}s`,
+                  animationDelay: `${(i % 5) * 0.8}s`,
                 }}
               />
             ))}
             <div className="relative grid md:grid-cols-2 items-center gap-8">
               <div>
                 <h2 className="font-display font-bold tracking-tight text-white text-3xl sm:text-4xl lg:text-5xl leading-[1.05]">
-                  Ready to become a<br />
-                  <span className="text-white">Cyber Security </span>
-                  <span className="text-primary text-glow-cyan">Investigator?</span>
+                  Ready to master <br />
+                  <span className="text-white">cyber </span>
+                  <span className="text-primary text-glow-cyan">defense?</span>
                 </h2>
                 <p className="mt-4 text-muted-foreground max-w-md">
                   Join thousands of learners building real skills for a safer digital world.
                 </p>
               </div>
               <div className="flex flex-col md:items-end md:justify-center gap-6">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-3 text-sm text-muted-foreground font-medium">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-3 text-sm text-muted-foreground font-medium mb-3">
                   <div>Platform: <span className="text-white">Android APK</span></div>
                   <div>Version: <span className="text-white">v1.0.0</span></div>
                   <div>Size: <span className="text-white">48 MB</span></div>
                   <div>Requires: <span className="text-white">Android 8.0+</span></div>
                   <div>Price: <span className="text-white">Free</span></div>
                 </div>
+
                 <MagneticButton
                   href="#download"
                   className="!px-8 !py-4 !text-base shadow-[0_0_60px_oklch(0.55_0.22_260/0.6)]"
