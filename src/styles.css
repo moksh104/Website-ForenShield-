@@ -227,6 +227,10 @@
   0% { stroke-dashoffset: 200; }
   100% { stroke-dashoffset: 0; }
 }
+@keyframes button-glow-shadow {
+  0%, 100% { box-shadow: 0 0 10px oklch(0.55 0.22 260 / 0.4); }
+  50% { box-shadow: 0 0 35px oklch(0.55 0.22 260 / 0.8), 0 0 15px oklch(0.55 0.22 260 / 0.5); }
+}
 
 @utility animate-float { animation: float 6s ease-in-out infinite; }
 @utility animate-float-slow { animation: float 9s ease-in-out infinite; }

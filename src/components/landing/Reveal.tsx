@@ -1,39 +1,46 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 
 export function Reveal({
   children,
   delay = 0,
   className = "",
-  as: Tag = "div",
+  as = "div",
+  staggerChildren = false,
 }: {
   children: ReactNode;
   delay?: number;
   className?: string;
-  as?: keyof React.JSX.IntrinsicElements;
+  as?: any;
+  staggerChildren?: boolean;
 }) {
-  const ref = useRef<HTMLElement | null>(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            (el as HTMLElement).style.transitionDelay = `${delay}ms`;
-            el.classList.add("in");
-            obs.unobserve(el);
-          }
-        });
+  const prefersReducedMotion = useReducedMotion();
+
+  const variants = {
+    hidden: prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+        ease: [0.16, 1, 0.3, 1], // Custom ease-out
+        delay: prefersReducedMotion ? 0 : delay / 1000,
+        ...(staggerChildren && !prefersReducedMotion ? { staggerChildren: 0.1 } : {}),
       },
-      { threshold: 0.12, rootMargin: "0px 0px -60px 0px" }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [delay]);
-  const Comp = Tag as any;
+    },
+  };
+
+  const MotionComponent = motion[as as keyof typeof motion] || motion.div;
+
   return (
-    <Comp ref={ref as any} className={`reveal ${className}`}>
+    <MotionComponent
+      variants={variants}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: "0px 0px -60px 0px" }}
+      className={className}
+    >
       {children}
-    </Comp>
+    </MotionComponent>
   );
 }

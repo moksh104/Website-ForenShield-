@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode, type MouseEvent } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   Shield,
   ShieldCheck,
@@ -52,6 +53,7 @@ import {
   Terminal,
 } from "lucide-react";
 import { Reveal } from "@/components/landing/Reveal";
+import { CountUp } from "@/components/landing/CountUp";
 import {
   IllusHacker,
   IllusNetwork,
@@ -105,8 +107,8 @@ function LandingPage() {
         <SimulationLabSection />
         <DeviceShowcase />
         <WorkflowStory />
-        <MissionControlSection />
         <SpotlightRow />
+        <FeaturesComparison />
         <TrustCredibility />
         <FinalCTA />
       </main>
@@ -370,7 +372,7 @@ function Nav() {
               <span className={`block h-0.5 w-4 bg-white rounded mt-1 transition-all duration-300 ${mobileOpen ? "-rotate-45 -translate-y-[2px]" : ""}`} />
             </button>
             <MagneticButton href="#download" onClick={(e: MouseEvent<HTMLAnchorElement>) => handleNavClick(e, "#download")}>
-              Get ForenShield
+              Download
               <ArrowRight className="h-3.5 w-3.5" />
             </MagneticButton>
           </div>
@@ -504,20 +506,16 @@ function Hero() {
           {/* LEFT */}
           <div className="lg:col-span-6">
             <Reveal>
-              <span className="inline-flex items-center gap-2 rounded-full glass px-3 py-1.5 text-[11px] font-mono mt-2">
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="absolute inset-0 rounded-full bg-success animate-ping opacity-75" />
-                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-success" />
+              <div className="inline-flex items-center gap-2 rounded-full glass px-3 py-1.5 text-[11px] font-mono mt-2 mb-2 border border-white/5">
+                <span className="tracking-[0.2em] uppercase text-muted-foreground">
+                  Free Android app · v1.0.0 · APK direct download
                 </span>
-                <span className="tracking-[0.24em] uppercase text-success">
-                  Interactive Investigation Demo
-                </span>
-              </span>
+              </div>
             </Reveal>
 
             <Reveal delay={60}>
               <h1 
-                className="mt-8 flex flex-col items-start font-display font-bold text-white"
+                className="mt-6 flex flex-col items-start font-display font-bold text-white"
                 style={{
                   fontSize: "clamp(2.75rem, 8vw, 4.5rem)",
                   lineHeight: 0.92,
@@ -535,27 +533,30 @@ function Hero() {
             </Reveal>
 
             <Reveal delay={220}>
-              <p className="mt-10 max-w-[42ch] text-[16px] md:text-[18px] lg:text-[19px] text-white/[0.72] leading-[1.6]">
-                Learn cyber defense through interactive lessons, practice with live attack simulations, and investigate real digital forensics cases.
+              <p className="mt-8 max-w-[42ch] text-[16px] md:text-[18px] lg:text-[19px] text-white/[0.72] leading-[1.6]">
+                Master digital forensics and incident response by investigating real-world cyber threats directly on your Android device.
               </p>
             </Reveal>
 
             <Reveal delay={300}>
-              <div className="mt-8 flex flex-wrap items-center gap-4">
-                <MagneticButton href="#download" className="!px-7 !py-4 !h-[54px] !text-[16px] flex items-center gap-2">
-                  Get ForenShield
+              <div className="mt-8 flex flex-col sm:flex-row sm:items-center gap-4">
+                <MagneticButton href="#download" className="!px-7 !py-4 !h-[54px] !text-[16px] flex items-center gap-2" style={{ animation: "button-glow-shadow 3s ease-in-out infinite" }}>
+                  Get ForenShield — Free
                   <ArrowRight className="h-4 w-4" />
                 </MagneticButton>
                 <a
-                  href="#platform"
-                  className="group inline-flex items-center justify-center gap-2 rounded-xl px-7 py-4 h-[54px] text-[16px] font-semibold text-white glass hover:bg-white/[0.06] active:scale-[0.98] transition-all duration-300"
+                  href="https://github.com/moksh104/Website-ForenShield-"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group inline-flex items-center justify-center gap-2 rounded-xl px-7 py-4 h-[54px] text-[15px] font-semibold text-white glass hover:bg-white/[0.06] active:scale-[0.98] transition-all duration-300"
                 >
-                  <span className="relative flex h-8 w-8 items-center justify-center rounded-full border border-primary/50">
-                    <Play className="h-3.5 w-3.5 text-primary ml-0.5" />
-                    <span className="absolute inset-0 rounded-full border border-primary/40 animate-pulse-ring" />
-                  </span>
-                  View Platform
+                  <Github className="h-5 w-5 text-muted-foreground group-hover:text-white transition-colors" />
+                  View on GitHub
                 </a>
+              </div>
+              <div className="mt-4 flex items-center gap-5 text-xs text-muted-foreground font-medium">
+                <span className="flex items-center gap-1.5"><User className="h-3.5 w-3.5 opacity-70" /> No account required</span>
+                <span className="flex items-center gap-1.5"><Github className="h-3.5 w-3.5 opacity-70" /> Open source</span>
               </div>
             </Reveal>
 
@@ -1028,31 +1029,7 @@ function StatCard({
   label: string;
   tone: string;
 }) {
-  const ref = useRef<HTMLDivElement | null>(null);
-  const [display, setDisplay] = useState("0");
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const target = parseInt(value.replace(/,/g, ""), 10);
-    const obs = new IntersectionObserver((entries) => {
-      entries.forEach((e) => {
-        if (!e.isIntersecting) return;
-        const start = performance.now();
-        const dur = 1400;
-        const tick = (t: number) => {
-          const p = Math.min(1, (t - start) / dur);
-          const eased = 1 - Math.pow(1 - p, 3);
-          const n = Math.round(target * eased);
-          setDisplay(n.toLocaleString());
-          if (p < 1) requestAnimationFrame(tick);
-        };
-        requestAnimationFrame(tick);
-        obs.unobserve(el);
-      });
-    }, { threshold: 0.3 });
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [value]);
+  const targetValue = parseInt(value.replace(/,/g, ""), 10);
 
   const toneCls: Record<string, string> = {
     primary: "text-primary group-hover:border-primary/50",
@@ -1063,8 +1040,7 @@ function StatCard({
 
   return (
     <div
-      ref={ref}
-      className={`group relative overflow-hidden rounded-2xl border border-white/10 ${toneCls[tone]} bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-[250ms] ease-out hover:-translate-y-1.5 hover:scale-[1.02] hover:shadow-[0_12px_30px_-10px_oklch(0.55_0.22_260/0.1)] will-change-transform p-6 sm:p-8 cursor-default`}
+      className={`group relative overflow-hidden rounded-2xl border border-white/10 ${toneCls[tone]} bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-[250ms] ease-out hover:-translate-y-1 hover:shadow-[0_8px_30px_-10px_oklch(0.55_0.22_260/0.4)] will-change-transform p-6 sm:p-8 cursor-default`}
     >
       <div className="flex items-start justify-between">
         <span className={`h-10 w-10 rounded-xl bg-current/10 border border-current/20 flex items-center justify-center ${toneCls[tone].split(" ")[0]}`}>
@@ -1073,8 +1049,8 @@ function StatCard({
         <MiniSpark tone={tone} />
       </div>
       <div className="mt-4">
-        <div className="text-4xl sm:text-5xl font-display font-bold text-white tracking-tight">
-          {display}
+        <div className="text-4xl sm:text-5xl font-display font-bold text-white tracking-tight flex items-baseline gap-1">
+          <CountUp end={targetValue} duration={1.5} />
           <span className={toneCls[tone].split(" ")[0]}>{suffix}</span>
         </div>
         <div className="mt-1 text-sm text-muted-foreground">{label}</div>
@@ -1160,10 +1136,13 @@ function HowItWorks() {
                   <div className="relative flex flex-col items-center text-center">
                     {/* CONNECTOR LINE (HIDDEN ON MOBILE) */}
                     {i < steps.length - 1 && (
-                      <div className="hidden md:block absolute top-9 left-[50%] w-full h-[2px] bg-primary/20 z-0">
-                        <div 
-                          className="h-full w-full bg-primary origin-left transition-transform duration-[600ms] ease-in-out"
-                          style={{ transform: isLineFilling ? 'scaleX(1)' : 'scaleX(0)' }}
+                      <div className="hidden md:block absolute top-9 left-[50%] w-full h-[2px] bg-primary/20 z-0 overflow-hidden">
+                        <motion.div 
+                          initial={tick === 999 ? { x: "0%" } : { x: "-100%" }}
+                          whileInView={{ x: "0%" }}
+                          viewport={{ once: true, margin: "0px 0px -100px 0px" }}
+                          transition={{ duration: 0.8, ease: "easeInOut" }}
+                          className="h-full w-full bg-primary"
                         />
                       </div>
                     )}
@@ -1474,7 +1453,7 @@ function ModuleCard({
       onClick={onPreview}
       onMouseMove={onMove}
       onMouseLeave={onLeave}
-      className="group relative snap-start shrink-0 w-[340px] sm:w-[400px] rounded-[20px] overflow-hidden border border-primary/15 bg-white/[0.02] shadow-[inset_0_1px_0_oklch(1_0_0/0.04)] cursor-pointer transition-all duration-[250ms] ease-out will-change-transform hover:-translate-y-1.5 hover:scale-[1.02] hover:border-primary hover:shadow-[0_12px_30px_-10px_oklch(0.55_0.22_260/0.3),inset_0_1px_0_oklch(1_0_0/0.06)]"
+      className="group relative snap-start shrink-0 w-[340px] sm:w-[400px] rounded-[20px] overflow-hidden border border-primary/15 bg-white/[0.02] shadow-[inset_0_1px_0_oklch(1_0_0/0.04)] cursor-pointer transition-all duration-[250ms] ease-out will-change-transform hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_8px_30px_-10px_oklch(0.55_0.22_260/0.4)]"
       style={{
         transform:
           "perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg))",
@@ -2146,7 +2125,7 @@ function CaseOfTheDay() {
   const [modalOpen, setModalOpen] = useState(false);
   return (
     <>
-    <div className="relative h-full rounded-[20px] overflow-hidden border border-primary/15 group transition-all duration-[250ms] ease-out hover:-translate-y-1.5 hover:scale-[1.02] hover:border-primary hover:shadow-[0_12px_30px_-10px_oklch(0.55_0.22_260/0.3)]">
+    <div className="relative h-full rounded-[20px] overflow-hidden border border-primary/15 group transition-all duration-[250ms] ease-out hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_8px_30px_-10px_oklch(0.55_0.22_260/0.4)]">
       {/* Moody hero */}
       <div className="relative aspect-[4/3] overflow-hidden">
         {/* Base moody gradient */}
@@ -3004,7 +2983,7 @@ function SimulationLabSection() {
 
             return (
               <Reveal key={i} delay={i * 100}>
-                <div className={`p-6 rounded-2xl border bg-white/[0.02] bg-gradient-to-b from-white/[0.06] to-transparent transition-all duration-300 ease-out hover:-translate-y-2 h-full flex flex-col group cursor-default ${cardToneCls[sim.tone]}`}>
+                <div className={`p-6 rounded-2xl border bg-white/[0.02] bg-gradient-to-b from-white/[0.06] to-transparent transition-all duration-300 ease-out hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_8px_30px_-10px_oklch(0.55_0.22_260/0.4)] h-full flex flex-col group cursor-default ${cardToneCls[sim.tone]}`}>
                   <div className={`h-14 w-14 rounded-xl border flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-300 motion-safe:animate-[pulse-glow_4s_ease-in-out_infinite] ${badgeCls[sim.tone]}`}>
                     <Icon className="h-6 w-6" />
                   </div>
@@ -3175,7 +3154,7 @@ function WorkflowStory() {
                 {/* Image / Mockup */}
                 <div className="flex-1 w-full">
                   <Reveal delay={100}>
-                    <div className="relative aspect-[4/3] rounded-2xl glass flex flex-col items-center justify-center p-8 overflow-hidden group hover:border-primary transition-all duration-[250ms] ease-out hover:-translate-y-1.5 hover:shadow-[0_12px_30px_-10px_oklch(0.55_0.22_260/0.3)] hover:scale-[1.02]">
+                    <div className="relative aspect-[4/3] rounded-2xl glass flex flex-col items-center justify-center p-8 overflow-hidden group hover:border-primary/40 transition-all duration-[250ms] ease-out hover:-translate-y-1 hover:shadow-[0_8px_30px_-10px_oklch(0.55_0.22_260/0.4)]">
                       <div className="absolute inset-0 grid-bg opacity-20" />
                       
                       {/* Scaled Mockup Render */}
@@ -3214,63 +3193,147 @@ function TrustCredibility() {
 }
 
 function FeaturesComparison() {
+  const prefersReducedMotion = useReducedMotion();
   const rows = [
-    { feature: "Simulated Environments", us: "Hands-on, Real Tools", them: "Abstract Theory" },
-    { feature: "Case Data", us: "Real-world Artifacts", them: "Sanitized Examples" },
-    { feature: "Progress Tracking", us: "Granular Skill Trees", them: "Completion Certificates" },
-    { feature: "Community Support", us: "Active Discord & Mentors", them: "Static Forums" },
+    { old: "Theory Only", new: "Interactive Investigations" },
+    { old: "Watching Videos", new: "Hands-on Simulations" },
+    { old: "Separate Tools", new: "One Unified Platform" },
+    { old: "Static Labs", new: "Real Case Investigations" },
+    { old: "Certificates", new: "Practical Investigation Skills" },
   ];
 
   return (
-    <section className="relative px-4 sm:px-8 py-20">
-      <div className="mx-auto max-w-[900px]">
-        <Reveal>
-          <div className="text-center mb-10">
-            <h2 className="font-display font-bold tracking-tight text-white text-3xl">
-              Why <span className="text-primary text-glow-cyan">ForenShield?</span>
-            </h2>
+    <section className="relative px-4 sm:px-8 py-32 overflow-hidden">
+      {/* Background ambient texture */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_0%,oklch(0.55_0.22_260/0.05),transparent_70%)]" />
+        <div className="absolute inset-0 grid-bg opacity-[0.15] [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_80%)]" />
+        {/* Subtle drifting particles */}
+        {Array.from({ length: 15 }).map((_, i) => (
+          <span
+            key={i}
+            className="absolute h-0.5 w-0.5 rounded-full bg-primary/40 animate-float"
+            style={{
+              top: `${(i * 61) % 100}%`,
+              left: `${(i * 43) % 100}%`,
+              animationDuration: `${10 + (i % 8)}s`,
+              animationDelay: `${(i % 5) * 1.5}s`,
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="relative mx-auto max-w-[1200px]">
+        {/* Header */}
+        <div className="text-center mb-24">
+          <motion.div
+            initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center gap-2 rounded-full glass px-3 py-1.5 text-[11px] font-mono mb-6 border border-white/5"
+          >
+            <span className="tracking-[0.24em] uppercase text-primary font-medium">Why ForenShield</span>
+          </motion.div>
+          <motion.h2
+            initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: prefersReducedMotion ? 0 : 0.1 }}
+            className="font-display font-bold tracking-tight text-white text-4xl sm:text-5xl lg:text-6xl max-w-3xl mx-auto leading-tight"
+          >
+            Why Learn Cybersecurity <span className="text-primary text-glow-cyan">Differently?</span>
+          </motion.h2>
+          <motion.p
+            initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: prefersReducedMotion ? 0 : 0.2 }}
+            className="mt-6 text-muted-foreground text-lg sm:text-xl max-w-2xl mx-auto"
+          >
+            One platform, four ways to master cyber defense.
+          </motion.p>
+        </div>
+
+        {/* Comparison List */}
+        <div className="relative max-w-[900px] mx-auto">
+          {/* Desktop/Tablet Headers */}
+          <div className="hidden md:grid grid-cols-[1fr_auto_1fr] gap-8 mb-12 px-6">
+            <div className="text-right font-mono text-xs tracking-widest text-muted-foreground/60 uppercase">Traditional Learning</div>
+            <div className="w-px" /> {/* Spacer for vertical line */}
+            <div className="text-left font-mono text-xs tracking-widest text-primary uppercase">ForenShield</div>
           </div>
-        </Reveal>
-        <Reveal delay={100}>
-          {/* Header Row (Desktop Only) */}
-          <div className="hidden sm:grid sm:grid-cols-[1.5fr_1fr_1fr] gap-4 px-6 pb-4 font-mono text-[10px] sm:text-xs tracking-wider text-muted-foreground/70 uppercase">
-            <div>Capability</div>
-            <div>ForenShield</div>
-            <div>Traditional Training</div>
-          </div>
-          
-          {/* Row Cards */}
-          <div className="space-y-3">
-            {rows.map((r, i) => (
-              <div 
-                key={i} 
-                className="grid grid-cols-1 sm:grid-cols-[1.5fr_1fr_1fr] gap-3 sm:gap-4 p-5 sm:px-6 sm:py-4 rounded-2xl glass border border-white/5 hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_8px_25px_-10px_oklch(0.55_0.22_260/0.25)] transition-all duration-[200ms] ease-out items-start sm:items-center group"
-              >
-                {/* Capability */}
-                <div>
-                  <div className="sm:hidden font-mono text-[10px] tracking-wider text-muted-foreground/70 uppercase mb-1.5">Capability</div>
-                  <div className="text-white font-bold text-sm sm:text-base">{r.feature}</div>
-                </div>
-                
-                {/* ForenShield */}
-                <div>
-                  <div className="sm:hidden font-mono text-[10px] tracking-wider text-muted-foreground/70 uppercase mb-2 mt-4">ForenShield</div>
-                  <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary font-bold text-xs sm:text-sm group-hover:bg-primary/15 transition-colors">
-                    <CheckCircle2 className="h-4 w-4 shrink-0" /> {r.us}
+
+          <div className="relative">
+            {/* The continuous vertical line (Desktop/Tablet only) */}
+            <div className="absolute left-[50%] top-0 bottom-0 w-px bg-primary/15 hidden md:block -translate-x-1/2 overflow-hidden">
+              {!prefersReducedMotion && (
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-b from-transparent via-primary to-transparent w-full"
+                  animate={{
+                    y: ["-100%", "200%"],
+                    opacity: [0, 1, 0]
+                  }}
+                  transition={{
+                    duration: 3.5,
+                    ease: "linear",
+                    repeat: Infinity,
+                    repeatDelay: 1
+                  }}
+                  style={{ height: "40%" }}
+                />
+              )}
+            </div>
+
+            {/* Rows */}
+            <div className="flex flex-col gap-10 sm:gap-12">
+              {rows.map((row, i) => (
+                <motion.div
+                  key={i}
+                  initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: prefersReducedMotion ? 0 : i * 0.1 }}
+                  className="group relative md:grid md:grid-cols-[1fr_auto_1fr] md:gap-8 items-center"
+                >
+                  {/* Hover background for the whole row (subtle wide gradient) */}
+                  <div className="absolute inset-0 -mx-6 md:-mx-12 rounded-xl bg-[radial-gradient(ellipse_at_center,oklch(0.55_0.22_260/0.05),transparent_70%)] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+                  {/* Left Column (Traditional) */}
+                  <div className="md:text-right px-6 md:px-0 py-2 md:py-4 transition-opacity duration-300 group-hover:opacity-60 z-10 relative">
+                    <div className="md:hidden font-mono text-[10px] tracking-wider text-muted-foreground/50 uppercase mb-2">Traditional Learning</div>
+                    <div className="text-muted-foreground font-medium text-xl md:text-2xl decoration-muted-foreground/30">{row.old}</div>
                   </div>
-                </div>
-                
-                {/* Traditional */}
-                <div>
-                  <div className="sm:hidden font-mono text-[10px] tracking-wider text-muted-foreground/70 uppercase mb-2 mt-4">Traditional Training</div>
-                  <div className="flex items-center gap-1.5 sm:gap-2 text-muted-foreground/50 font-medium text-xs sm:text-sm">
-                    <X className="h-4 w-4 shrink-0 opacity-40" /> {r.them}
+
+                  {/* Center Divider / Arrow */}
+                  <div className="relative hidden md:flex w-0 justify-center z-10 h-full">
+                    {/* Active highlight line segment on hover */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-px h-0 bg-primary opacity-0 group-hover:opacity-100 group-hover:h-full transition-all duration-300 motion-reduce:transition-none" />
+                    
+                    {/* The Arrow (slides right on hover) */}
+                    <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 flex items-center justify-center text-primary/40 group-hover:text-primary transition-colors duration-300">
+                      <div className="bg-background px-4 py-2 group-hover:translate-x-2 transition-transform duration-300 ease-out motion-reduce:translate-x-0">
+                        <ArrowRight className="h-5 w-5" />
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            ))}
+                  
+                  {/* Mobile Arrow/Divider */}
+                  <div className="md:hidden px-6 py-2">
+                     <ArrowRight className="h-5 w-5 text-primary/40 rotate-90" />
+                  </div>
+
+                  {/* Right Column (ForenShield) */}
+                  <div className="md:text-left px-6 md:px-0 py-2 md:py-4 z-10 relative">
+                    <div className="md:hidden font-mono text-[10px] tracking-wider text-primary/70 uppercase mb-2 mt-2">ForenShield</div>
+                    <div className="text-white font-bold text-xl md:text-2xl tracking-tight transition-all duration-300 group-hover:text-glow-cyan motion-reduce:group-hover:text-white">
+                      {row.new}
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
-        </Reveal>
+        </div>
       </div>
     </section>
   );
@@ -3300,7 +3363,7 @@ function Roadmap() {
                   <div className={`w-2.5 h-2.5 rounded-full ${item.status === 'live' ? 'bg-primary animate-pulse-glow shadow-[0_0_8px_oklch(0.55_0.22_260)]' : 'bg-white/20'}`} />
                 </div>
                 {/* Card */}
-                <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-6 rounded-2xl glass hover:-translate-y-1.5 hover:scale-[1.02] hover:border-primary hover:shadow-[0_12px_30px_-10px_oklch(0.55_0.22_260/0.3)] transition-all duration-[250ms] ease-out">
+                <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-6 rounded-2xl glass hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_8px_30px_-10px_oklch(0.55_0.22_260/0.4)] transition-all duration-[250ms] ease-out">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[10px] font-mono tracking-widest text-primary uppercase">{item.q}</span>
                     <span className={`text-[9px] px-2 py-0.5 rounded-full font-mono uppercase ${item.status === 'live' ? 'bg-primary/10 text-primary border border-primary/20' : 'bg-white/5 text-muted-foreground border border-white/10'}`}>
@@ -3331,7 +3394,7 @@ function Testimonials() {
         <div className="grid md:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
             <Reveal key={i} delay={i * 100}>
-              <div className="p-8 rounded-2xl glass flex flex-col h-full hover:-translate-y-1.5 hover:scale-[1.02] hover:border-primary hover:shadow-[0_12px_30px_-10px_oklch(0.55_0.22_260/0.3)] transition-all duration-[250ms] ease-out">
+              <div className="p-8 rounded-2xl glass flex flex-col h-full hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_8px_30px_-10px_oklch(0.55_0.22_260/0.4)] transition-all duration-[250ms] ease-out">
                 <div className="flex gap-1 mb-6 text-primary">
                   {[1,2,3,4,5].map(s => <Star key={s} className="h-4 w-4 fill-current" />)}
                 </div>
@@ -3459,14 +3522,30 @@ function FinalCTA() {
                   <div>Price: <span className="text-white">Free</span></div>
                 </div>
 
-                <MagneticButton
-                  href="#download"
-                  className="!px-8 !py-4 !text-base shadow-[0_0_60px_oklch(0.55_0.22_260/0.6)]"
-                >
-                  <Rocket className="h-5 w-5" />
-                  Get ForenShield
-                  <ArrowRight className="h-4 w-4" />
-                </MagneticButton>
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  <MagneticButton
+                    href="#download"
+                    className="!px-8 !py-4 !text-base shadow-[0_0_60px_oklch(0.55_0.22_260/0.6)]"
+                    style={{ animation: "button-glow-shadow 3s ease-in-out infinite" }}
+                  >
+                    <Rocket className="h-5 w-5" />
+                    Start Learning Free
+                    <ArrowRight className="h-4 w-4" />
+                  </MagneticButton>
+                  <a
+                    href="https://github.com/moksh104/Website-ForenShield-"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group inline-flex items-center justify-center gap-2 rounded-xl px-7 py-4 h-[54px] text-[15px] font-semibold text-white border border-white/10 bg-white/5 hover:bg-white/10 active:scale-[0.98] transition-all duration-300"
+                  >
+                    <Github className="h-5 w-5 text-muted-foreground group-hover:text-white transition-colors" />
+                    View on GitHub
+                  </a>
+                </div>
+                <div className="flex items-center gap-5 text-xs text-muted-foreground font-medium justify-center md:justify-end w-full">
+                  <span className="flex items-center gap-1.5"><User className="h-3.5 w-3.5 opacity-70" /> No account required</span>
+                  <span className="flex items-center gap-1.5"><Github className="h-3.5 w-3.5 opacity-70" /> Open source</span>
+                </div>
               </div>
             </div>
           </div>
