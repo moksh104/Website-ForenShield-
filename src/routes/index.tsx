@@ -100,7 +100,7 @@ function LandingPage() {
       <Nav />
       <main>
         <Hero />
-        <StatsRow />
+        <HighlightsRow />
         <HowItWorks />
         <PlatformModules />
         <CyberAcademySection />
@@ -560,30 +560,7 @@ function Hero() {
               </div>
             </Reveal>
 
-            <Reveal delay={420}>
-              <div className="mt-6 flex items-center gap-4">
-                <div className="flex -space-x-2">
-                  {[
-                    "from-primary to-secondary",
-                    "from-success to-primary",
-                    "from-warning to-danger",
-                    "from-secondary to-primary",
-                  ].map((g, i) => (
-                    <span
-                      key={i}
-                      className={`h-9 w-9 rounded-full ring-2 ring-background bg-gradient-to-br ${g} flex items-center justify-center text-[10px] font-bold text-white`}
-                    >
-                      {"AZKM"[i]}
-                    </span>
-                  ))}
-                </div>
-                <div className="text-[15px] text-white/80">
-                  <span className="text-white font-bold tracking-wide">10K+ learners</span>{" "}
-                  are already solving cases{" "}
-                  <span className="text-success font-semibold ml-1">↗</span>
-                </div>
-              </div>
-            </Reveal>
+
           </div>
 
           {/* RIGHT */}
@@ -992,22 +969,32 @@ function RadarScope() {
 }
 
 /* =============================================================
-   STATS ROW
+   HIGHLIGHTS ROW
    ============================================================= */
-function StatsRow() {
-  const stats = [
-    { icon: BookOpen, value: "10,000", suffix: "+", label: "Lessons Completed", tone: "primary" },
-    { icon: Search, value: "500", suffix: "+", label: "Practice Investigations", tone: "success" },
-    { icon: FlaskConical, value: "100", suffix: "+", label: "Interactive Labs", tone: "warning" },
-    { icon: BarChart3, value: "95", suffix: "%", label: "Completion Satisfaction", tone: "secondary" },
+function HighlightsRow() {
+  const highlights = [
+    { number: "01", icon: Layers, value: 5, suffix: "", title: "Core Modules", desc: "Mission Control, Cyber Academy, Investigation Lab, Simulation Lab, and Reports working together as one platform.", tone: "primary" },
+    { number: "02", icon: Target, value: 20, suffix: "+", title: "Planned Investigations", desc: "Real-world cybersecurity scenarios covering phishing, malware, ransomware, digital forensics, and incident response.", tone: "success" },
+    { number: "03", icon: Zap, title: "Interactive Learning", desc: "Hands-on simulations, guided investigations, and practical cybersecurity exercises instead of theory-only learning.", tone: "warning" },
+    { number: "04", icon: Smartphone, title: "Cross-Platform Architecture", desc: "Designed for Flutter Mobile, Web Dashboard, REST API, PostgreSQL, Unity simulations, and Cloud-based services.", tone: "secondary" },
   ] as const;
+
   return (
     <section className="relative px-4 sm:px-8 pb-4">
       <div className="mx-auto max-w-[1400px]">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          {stats.map((s, i) => (
-            <Reveal key={i} delay={i * 80}>
-              <StatCard {...s} />
+        <Reveal>
+          <motion.div 
+            initial={{ scaleX: 0 }}
+            whileInView={{ scaleX: 1 }}
+            viewport={{ once: true, margin: "0px 0px -50px 0px" }}
+            transition={{ duration: 1, ease: "easeOut" }}
+            className="mb-8 h-px w-full bg-gradient-to-r from-primary via-primary/20 to-transparent origin-left"
+          />
+        </Reveal>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          {highlights.map((h, i) => (
+            <Reveal key={i} delay={i * 80} className="flex h-full w-full">
+              <HighlightCard {...h} />
             </Reveal>
           ))}
         </div>
@@ -1016,21 +1003,23 @@ function StatsRow() {
   );
 }
 
-function StatCard({
+function HighlightCard({
   icon: Icon,
+  number,
   value,
   suffix,
-  label,
+  title,
+  desc,
   tone,
 }: {
   icon: any;
-  value: string;
-  suffix: string;
-  label: string;
+  number: string;
+  value?: number;
+  suffix?: string;
+  title: string;
+  desc: string;
   tone: string;
 }) {
-  const targetValue = parseInt(value.replace(/,/g, ""), 10);
-
   const toneCls: Record<string, string> = {
     primary: "text-primary group-hover:border-primary/50",
     success: "text-success group-hover:border-success/50",
@@ -1038,48 +1027,36 @@ function StatCard({
     secondary: "text-secondary group-hover:border-secondary/50",
   };
 
+  const accentColor = toneCls[tone].split(" ")[0];
+
   return (
     <div
-      className={`group relative overflow-hidden rounded-2xl border border-white/10 ${toneCls[tone]} bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-[250ms] ease-out hover:-translate-y-1 hover:shadow-[0_8px_30px_-10px_oklch(0.55_0.22_260/0.4)] will-change-transform p-6 sm:p-8 cursor-default`}
+      className={`group relative overflow-hidden rounded-2xl border border-white/10 ${toneCls[tone]} bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-[250ms] ease-out hover:-translate-y-1 hover:shadow-[0_8px_30px_-10px_oklch(0.55_0.22_260/0.4)] will-change-transform p-6 sm:p-8 cursor-default flex flex-col w-full h-full`}
     >
-      <div className="flex items-start justify-between">
-        <span className={`h-10 w-10 rounded-xl bg-current/10 border border-current/20 flex items-center justify-center ${toneCls[tone].split(" ")[0]}`}>
-          <Icon className="h-5 w-5" />
+      <div className="flex items-center justify-between">
+        <span className={`h-10 w-10 rounded-xl bg-current/10 border border-current/20 flex items-center justify-center ${accentColor} transition-all duration-500 group-hover:shadow-[0_0_20px_currentColor]`}>
+          <Icon className="h-5 w-5 group-hover:animate-pulse" />
         </span>
-        <MiniSpark tone={tone} />
+        <span className="font-mono text-[11px] font-semibold tracking-widest text-white/20 group-hover:text-white/40 transition-colors duration-300">
+          {number}
+        </span>
       </div>
-      <div className="mt-4">
-        <div className="text-4xl sm:text-5xl font-display font-bold text-white tracking-tight flex items-baseline gap-1">
-          <CountUp end={targetValue} duration={1.5} />
-          <span className={toneCls[tone].split(" ")[0]}>{suffix}</span>
+      <div className="mt-8 flex flex-col flex-grow justify-start">
+        <div className="flex flex-wrap items-baseline gap-1.5 font-display font-bold text-white tracking-tight">
+          {value !== undefined && (
+            <div className="flex items-baseline gap-0.5 text-3xl sm:text-4xl">
+              <CountUp end={value} duration={1.5} />
+              <span className={accentColor}>{suffix}</span>
+            </div>
+          )}
+          <span className={value === undefined ? "text-xl sm:text-2xl" : "text-lg sm:text-xl text-white/90"}>{title}</span>
         </div>
-        <div className="mt-1 text-sm text-muted-foreground">{label}</div>
+        <div className="mt-3 text-[14px] leading-relaxed text-muted-foreground group-hover:text-white/70 transition-colors duration-300">
+          {desc}
+        </div>
       </div>
-      <span className="pointer-events-none absolute -inset-x-8 -top-16 h-32 opacity-0 group-hover:opacity-100 blur-2xl bg-current/20 transition-opacity duration-500 will-change-opacity" />
+      <span className="pointer-events-none absolute -inset-x-8 -top-16 h-32 opacity-0 group-hover:opacity-100 blur-2xl bg-current/10 transition-opacity duration-500 will-change-opacity" />
     </div>
-  );
-}
-
-function MiniSpark({ tone }: { tone: string }) {
-  const color =
-    tone === "success"
-      ? "oklch(0.78 0.18 155)"
-      : tone === "warning"
-      ? "oklch(0.80 0.17 75)"
-      : tone === "secondary"
-      ? "oklch(0.82 0.14 210)"
-      : "oklch(0.55 0.22 260)";
-  return (
-    <svg viewBox="0 0 60 24" className="h-6 w-16 opacity-80">
-      <path
-        d="M0 18 L10 12 L18 16 L26 8 L34 14 L42 6 L50 10 L60 2"
-        fill="none"
-        stroke={color}
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
   );
 }
 
