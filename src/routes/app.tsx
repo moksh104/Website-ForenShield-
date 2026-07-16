@@ -106,23 +106,7 @@ function AmbientField() {
    STATUS BAR — fake iOS-style time + signals
    ============================================================ */
 function StatusBar({ tone = "light" }: { tone?: "light" | "dim" }) {
-  return (
-    <div
-      className={`relative z-10 flex items-center justify-between px-6 pt-3 pb-1 text-[11px] font-mono ${
-        tone === "dim" ? "text-muted-foreground" : "text-white/80"
-      }`}
-    >
-      <span className="tracking-wider">09:41</span>
-      <div className="flex items-center gap-1.5">
-        <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary animate-blink" />
-        <span className="tracking-[0.2em]">SECURE</span>
-      </div>
-      <div className="flex items-center gap-1">
-        <span className="inline-block h-2 w-3 rounded-sm border border-current" />
-        <span className="inline-block h-1 w-0.5 rounded-sm bg-current" />
-      </div>
-    </div>
-  );
+  return null;
 }
 
 /* ============================================================
@@ -189,19 +173,7 @@ function Splash({ onSkip }: { onSkip: () => void }) {
           </div>
         </div>
 
-        {/* Wordmark */}
-        <div className="mt-10 text-center">
-          <h1 className="font-display text-4xl font-bold tracking-tight text-white">
-            FOREN<span className="text-gradient-cyber">SHIELD</span>
-          </h1>
-          <div className="mt-3 flex items-center justify-center gap-2 text-[11px] font-mono uppercase tracking-[0.4em] text-muted-foreground">
-            <span>Learn</span>
-            <span className="text-primary">·</span>
-            <span>Investigate</span>
-            <span className="text-primary">·</span>
-            <span>Defend</span>
-          </div>
-        </div>
+
       </div>
 
       {/* Boot console */}

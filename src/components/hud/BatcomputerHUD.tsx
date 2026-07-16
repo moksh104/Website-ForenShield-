@@ -1,15 +1,15 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   Activity,
-  ChevronDown,
-  ChevronUp,
   FileSearch,
   FolderLock,
   Radar,
   ShieldAlert,
   Sparkles,
   Zap,
+  X,
 } from "lucide-react";
 
 /**
@@ -55,6 +55,8 @@ export function BatcomputerHUD() {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [tick, setTick] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
     setMounted(true);
@@ -66,102 +68,200 @@ export function BatcomputerHUD() {
     return () => clearInterval(id);
   }, []);
 
+  // Handle escape key and click outside
+  useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [open]);
+
   const alert = useMemo(() => ALERTS[tick % ALERTS.length], [tick]);
 
-  // hide entirely on /app splash/onboarding to avoid covering the phone frame —
-  // we still show it on the mission control home (controlled below via inset on mobile)
   if (!mounted) return null;
 
   return (
     <div
-      className="fixed z-[60] bottom-3 right-3 sm:bottom-4 sm:right-4 font-mono pointer-events-none"
+      ref={containerRef}
+      className="fixed z-[60] bottom-4 right-4 sm:bottom-6 sm:right-6 font-mono pointer-events-none"
       aria-live="polite"
     >
-      <div
-        className={[
-          "pointer-events-auto rounded-2xl glass-strong shadow-elevated overflow-hidden backdrop-blur-xl",
-          "border border-primary/20",
-          open ? "w-[300px]" : "w-[210px]",
-          "transition-[width] duration-300 ease-out flex flex-col",
-          open ? "max-h-[400px]" : "max-h-auto"
-        ].join(" ")}
-      >
-        {/* top scanline */}
-        <div className="relative h-px w-full overflow-hidden shrink-0">
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/70 to-transparent animate-scan" />
-        </div>
+      <AnimatePresence>
+        {!open && (
+          <motion.div 
+            key="compass-container"
+            className="absolute bottom-0 right-0 pointer-events-auto"
+            exit={{ opacity: 0, scale: 0.5, filter: "blur(8px)", transition: { duration: 0.2 } }}
+          >
+            <CompassOrb 
+              onClick={() => setOpen(true)} 
+              mission={mission} 
+              prefersReducedMotion={prefersReducedMotion} 
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-        {/* Header bar */}
-        <button
-          onClick={() => setOpen((o) => !o)}
-          className="w-full shrink-0 flex items-center gap-2.5 px-3 py-2 text-left hover:bg-white/[0.03] transition"
-          aria-expanded={open}
-          aria-label="Toggle HUD"
-        >
+      <AnimatePresence>
+        {open && (
+          <motion.div 
+            key="panel-container"
+            className="relative pointer-events-auto origin-bottom-right"
+            initial={{ scale: 0.8, opacity: 0, filter: "blur(12px)" }}
+            animate={{ scale: 1, opacity: 1, filter: "blur(0px)" }}
+            exit={{ scale: 0.9, opacity: 0, filter: "blur(8px)", transition: { duration: 0.2, ease: "easeIn" } }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 300, 
+              damping: 24,
+              mass: 0.8
+            }}
+          >
+            <ExpandedPanel 
+              onClose={() => setOpen(false)} 
+              mission={mission} 
+              alert={alert}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function CompassOrb({ onClick, mission, prefersReducedMotion }: { onClick: () => void, mission: any, prefersReducedMotion: boolean | null }) {
+  return (
+    <motion.button
+      onClick={onClick}
+      className="relative flex items-center justify-center rounded-full bg-black/85 border border-primary/40 backdrop-blur-md group focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+      title="Mission Control"
+      style={{ width: 56, height: 56 }}
+      initial={{ scale: 0.8, opacity: 0, filter: "blur(8px)" }}
+      animate={{ 
+        scale: 1, 
+        opacity: 1, 
+        filter: "blur(0px)",
+        y: prefersReducedMotion ? 0 : [0, -3, 0],
+        boxShadow: prefersReducedMotion 
+          ? "0 0 16px rgba(0, 163, 255, 0.2)" 
+          : [
+              "0 0 16px rgba(0, 163, 255, 0.2)", 
+              "0 0 24px rgba(0, 163, 255, 0.35)", 
+              "0 0 16px rgba(0, 163, 255, 0.2)"
+            ]
+      }}
+      transition={{ 
+        duration: 4, 
+        repeat: Infinity, 
+        ease: "easeInOut",
+        scale: { duration: 0.4, type: "spring", bounce: 0.2 },
+        opacity: { duration: 0.3 },
+        filter: { duration: 0.3 }
+      }}
+      whileHover={{ 
+        scale: 1.05, 
+        boxShadow: "0 0 30px rgba(0, 163, 255, 0.5)",
+        transition: { duration: 0.2 }
+      }}
+      whileTap={{ scale: 0.96, transition: { duration: 0.1 } }}
+    >
+      <RadarBadge tone={mission.tone} size={48} noBg speedMultiplier={1.5} />
+      
+      {/* pulsing center dot */}
+      <div className="absolute inset-0 m-auto h-1.5 w-1.5 rounded-full bg-primary/90 animate-pulse-glow" style={{ boxShadow: "0 0 8px currentColor" }} />
+    </motion.button>
+  );
+}
+
+function ExpandedPanel({ onClose, mission, alert }: { onClose: () => void, mission: any, alert: any }) {
+  return (
+    <div
+      className={[
+        "rounded-2xl glass-strong shadow-[0_8px_32px_rgba(0,163,255,0.15)] overflow-hidden backdrop-blur-xl",
+        "border border-primary/20",
+        "w-[300px]",
+        "flex flex-col"
+      ].join(" ")}
+    >
+      {/* top scanline */}
+      <div className="relative h-px w-full overflow-hidden shrink-0">
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/70 to-transparent animate-scan" />
+      </div>
+
+      {/* Header bar */}
+      <div className="w-full shrink-0 flex items-center justify-between gap-2.5 px-3 py-2 bg-white/[0.02]">
+        <div className="flex items-center gap-2.5 flex-1 min-w-0">
           <RadarBadge tone={mission.tone} />
           <div className="min-w-0 flex-1">
             <div className={`text-[9px] tracking-[0.2em] ${mission.tone}`}>{mission.label}</div>
             <div className="text-[11px] text-foreground/90 truncate">{mission.sub}</div>
           </div>
-          {open ? (
-            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-          ) : (
-            <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
-          )}
+        </div>
+        <button
+          onClick={onClose}
+          className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-white/[0.08] text-muted-foreground hover:text-white transition-colors"
+          aria-label="Close HUD"
+        >
+          <X className="h-4 w-4" />
         </button>
+      </div>
 
-        {/* Counters strip (always visible) */}
-        <div className="grid grid-cols-3 border-t border-white/5 shrink-0">
-          <Counter icon={<FileSearch className="h-3 w-3" />} label="EVID" value="128" tone="text-primary" />
-          <Counter icon={<FolderLock className="h-3 w-3" />} label="CASE" value="07" tone="text-secondary" />
-          <Counter icon={<Sparkles className="h-3 w-3" />} label="XP" value="4.8K" tone="text-achievement" />
-        </div>
+      {/* Counters strip (always visible) */}
+      <div className="grid grid-cols-3 border-t border-white/5 shrink-0">
+        <Counter icon={<FileSearch className="h-3 w-3" />} label="EVID" value="128" tone="text-primary" />
+        <Counter icon={<FolderLock className="h-3 w-3" />} label="CASE" value="07" tone="text-secondary" />
+        <Counter icon={<Sparkles className="h-3 w-3" />} label="XP" value="4.8K" tone="text-achievement" />
+      </div>
 
-        {/* Expanded body */}
-        {open && (
-          <div className="border-t border-white/5 p-3 space-y-3 animate-fade-up overflow-y-auto custom-scrollbar">
-            {/* Alert ticker */}
-            <div className="rounded-lg border border-danger/25 bg-danger/[0.06] p-2 shrink-0">
-              <div className="flex items-center gap-1.5 text-[9px] tracking-[0.2em] text-danger">
-                <ShieldAlert className="h-3 w-3 animate-pulse-glow" /> ALERT FEED
-              </div>
-              <div key={alert.code} className="mt-1 text-[11px] text-foreground/90 animate-fade-up">
-                <span className="text-danger">{alert.code}</span>
-                <span className="text-muted-foreground"> · </span>
-                {alert.text}
-              </div>
-            </div>
-
-            {/* Vitals */}
-            <div className="grid grid-cols-2 gap-2 text-[10px] shrink-0">
-              <Vital label="UPLINK" value="STABLE" tone="text-success" dot />
-              <Vital label="THREAT" value="ELEVATED" tone="text-warning" dot />
-              <Vital label="LATENCY" value="42ms" tone="text-primary" />
-              <Vital label="SHIELD" value="100%" tone="text-success" />
-            </div>
-
-            {/* Quick jumps */}
-            <div className="grid grid-cols-3 gap-1.5 shrink-0">
-              <HudJump to="/app" icon={<Activity className="h-3 w-3" />} label="HQ" />
-              <HudJump to="/investigate" icon={<FileSearch className="h-3 w-3" />} label="LAB" />
-              <HudJump to="/simulate" icon={<Zap className="h-3 w-3" />} label="SIM" />
-            </div>
+      {/* Expanded body */}
+      <div className="border-t border-white/5 p-3 space-y-3 animate-fade-up overflow-y-auto custom-scrollbar max-h-[300px]">
+        {/* Alert ticker */}
+        <div className="rounded-lg border border-danger/25 bg-danger/[0.06] p-2 shrink-0">
+          <div className="flex items-center gap-1.5 text-[9px] tracking-[0.2em] text-danger">
+            <ShieldAlert className="h-3 w-3 animate-pulse-glow" /> ALERT FEED
           </div>
-        )}
-
-        {/* bottom scanline */}
-        <div className="relative h-px w-full overflow-hidden shrink-0">
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-secondary/60 to-transparent animate-scan" />
+          <div key={alert.code} className="mt-1 text-[11px] text-foreground/90 animate-fade-up">
+            <span className="text-danger">{alert.code}</span>
+            <span className="text-muted-foreground"> · </span>
+            {alert.text}
+          </div>
         </div>
+
+        {/* Vitals */}
+        <div className="grid grid-cols-2 gap-2 text-[10px] shrink-0">
+          <Vital label="UPLINK" value="STABLE" tone="text-success" dot />
+          <Vital label="THREAT" value="ELEVATED" tone="text-warning" dot />
+          <Vital label="LATENCY" value="42ms" tone="text-primary" />
+          <Vital label="SHIELD" value="100%" tone="text-success" />
+        </div>
+      </div>
+
+      {/* bottom scanline */}
+      <div className="relative h-px w-full overflow-hidden shrink-0">
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-secondary/60 to-transparent animate-scan" />
       </div>
     </div>
   );
 }
 
-function RadarBadge({ tone }: { tone: string }) {
+function RadarBadge({ tone, size = 32, noBg = false, speedMultiplier = 1 }: { tone: string; size?: number; noBg?: boolean; speedMultiplier?: number }) {
   return (
-    <div className="relative h-8 w-8 shrink-0 rounded-lg bg-black/40 border border-white/10 overflow-hidden">
-      <svg viewBox="0 0 40 40" className="absolute inset-0">
+    <div 
+      className={`relative shrink-0 overflow-hidden ${noBg ? "" : "rounded-lg bg-black/40 border border-white/10"}`}
+      style={{ width: size, height: size }}
+    >
+      <svg viewBox="0 0 40 40" className="absolute inset-0 h-full w-full">
         <defs>
           <radialGradient id="hud-radar" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="currentColor" stopOpacity="0.0" />
@@ -176,7 +276,13 @@ function RadarBadge({ tone }: { tone: string }) {
           <line x1="2" y1="20" x2="38" y2="20" stroke="currentColor" strokeOpacity="0.12" />
           <line x1="20" y1="2" x2="20" y2="38" stroke="currentColor" strokeOpacity="0.12" />
         </g>
-        <g className={`${tone} animate-radar`} style={{ transformOrigin: "20px 20px" }}>
+        <g 
+          className={`${tone} animate-radar`} 
+          style={{ 
+            transformOrigin: "20px 20px", 
+            animationDuration: speedMultiplier !== 1 ? `${4 / speedMultiplier}s` : undefined 
+          }}
+        >
           <path d="M20 20 L20 2 A18 18 0 0 1 38 20 Z" fill="url(#hud-radar)" />
           <line x1="20" y1="20" x2="20" y2="2" stroke="currentColor" strokeOpacity="0.85" strokeWidth="1" />
         </g>
@@ -184,7 +290,7 @@ function RadarBadge({ tone }: { tone: string }) {
         <circle cx="26" cy="13" r="1.1" className="fill-danger animate-blink" />
         <circle cx="13" cy="27" r="0.9" className="fill-primary animate-pulse-glow" />
       </svg>
-      <Radar className="absolute inset-0 m-auto h-3 w-3 text-foreground/0" aria-hidden />
+      {!noBg && <Radar className="absolute inset-0 m-auto h-3 w-3 text-foreground/0" aria-hidden />}
     </div>
   );
 }
@@ -230,25 +336,5 @@ function Vital({
         {value}
       </span>
     </div>
-  );
-}
-
-function HudJump({
-  to,
-  icon,
-  label,
-}: {
-  to: "/app" | "/investigate" | "/simulate" | "/academy";
-  icon: React.ReactNode;
-  label: string;
-}) {
-  return (
-    <Link
-      to={to}
-      className="flex items-center justify-center gap-1 h-7 rounded-md border border-white/10 bg-white/[0.03] text-[10px] tracking-[0.18em] text-foreground/80 hover:text-primary hover:border-primary/40 transition"
-    >
-      {icon}
-      {label}
-    </Link>
   );
 }

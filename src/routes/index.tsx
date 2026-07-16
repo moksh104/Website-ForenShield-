@@ -517,8 +517,8 @@ function Hero() {
               <h1 
                 className="mt-6 flex flex-col items-start font-display font-bold text-white"
                 style={{
-                  fontSize: "clamp(2.75rem, 8vw, 4.5rem)",
-                  lineHeight: 0.92,
+                  fontSize: "clamp(3.5rem, 10.5vw, 6rem)",
+                  lineHeight: 0.95,
                   letterSpacing: "-0.05em",
                   maxWidth: "620px",
                 }}
@@ -556,7 +556,6 @@ function Hero() {
               </div>
               <div className="mt-4 flex items-center gap-5 text-xs text-muted-foreground font-medium">
                 <span className="flex items-center gap-1.5"><User className="h-3.5 w-3.5 opacity-70" /> No account required</span>
-                <span className="flex items-center gap-1.5"><Github className="h-3.5 w-3.5 opacity-70" /> Open source</span>
               </div>
             </Reveal>
 
@@ -1064,24 +1063,7 @@ function HighlightCard({
    HOW IT WORKS
    ============================================================= */
 function HowItWorks() {
-  const [tick, setTick] = useState(0);
-
-  useEffect(() => {
-    // Respect prefers-reduced-motion
-    const mql = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
-    if (mql && mql.matches) {
-      setTick(999);
-      return;
-    }
-
-    const timer = setInterval(() => {
-      setTick((t) => {
-        if (t >= 52) return -4; // Reset and wait 4 ticks (400ms) for fadeout before restarting
-        return t + 1;
-      });
-    }, 100);
-    return () => clearInterval(timer);
-  }, []);
+  const [hoveredIndex, setHoveredIndex] = useState(0);
 
   const steps = [
     { icon: GraduationCap, title: "Learn Concepts", desc: "Master cyber defense in Academy" },
@@ -1090,8 +1072,15 @@ function HowItWorks() {
     { icon: FileText, title: "Generate Reports", desc: "File verdicts and export findings" },
     { icon: Trophy, title: "Earn Rank & XP", desc: "Level up your mission control" },
   ];
+
+  const transitionClass = "transition-all duration-[400ms] ease-[cubic-bezier(0.22,1,0.36,1)]";
+
   return (
-    <section id="features" className="relative px-4 sm:px-8 py-16 sm:py-24 scroll-mt-24">
+    <section 
+      id="features" 
+      className="relative px-4 sm:px-8 py-16 sm:py-24 scroll-mt-24 group/timeline"
+      onMouseLeave={() => setHoveredIndex(0)}
+    >
       <div className="mx-auto max-w-[1400px]">
         <div className="rounded-3xl border border-white/[0.06] bg-white/[0.015] backdrop-blur-sm p-6 sm:p-10 relative overflow-hidden">
           <div className="absolute inset-0 grid-bg opacity-30 [mask-image:radial-gradient(ellipse_at_center,black_20%,transparent_80%)]" />
@@ -1102,58 +1091,97 @@ function HowItWorks() {
           </Reveal>
 
           <div className="relative mt-10 grid grid-cols-2 md:grid-cols-5 gap-6 md:gap-2">
+            
+            {/* CONTINUOUS LINE BACKGROUND (HIDDEN ON MOBILE) */}
+            <div className="hidden md:block absolute top-9 left-[10%] right-[10%] h-[2px] bg-primary/10 z-0 overflow-hidden rounded-full">
+              {/* FILLED PROGRESS LINE */}
+              <div 
+                className={`h-full bg-primary origin-left ${transitionClass}`}
+                style={{ 
+                  transform: `scaleX(${hoveredIndex / (steps.length - 1)})` 
+                }}
+              />
+            </div>
+
             {steps.map((s, i) => {
               const Icon = s.icon;
-              const nodeActivateTick = i === 0 ? 0 : (i - 1) * 8 + 6;
-              const isNodeActive = tick >= nodeActivateTick || tick === 999;
-              const isLineFilling = tick >= i * 8 || tick === 999;
+              const isHovered = hoveredIndex === i;
+              const isPast = i <= hoveredIndex;
 
               return (
                 <Reveal key={i} delay={i * 120}>
-                  <div className="relative flex flex-col items-center text-center">
-                    {/* CONNECTOR LINE (HIDDEN ON MOBILE) */}
-                    {i < steps.length - 1 && (
-                      <div className="hidden md:block absolute top-9 left-[50%] w-full h-[2px] bg-primary/20 z-0 overflow-hidden">
-                        <motion.div 
-                          initial={tick === 999 ? { x: "0%" } : { x: "-100%" }}
-                          whileInView={{ x: "0%" }}
-                          viewport={{ once: true, margin: "0px 0px -100px 0px" }}
-                          transition={{ duration: 0.8, ease: "easeInOut" }}
-                          className="h-full w-full bg-primary"
-                        />
-                      </div>
-                    )}
-                    
+                  <div 
+                    className="relative flex flex-col items-center text-center cursor-pointer outline-none"
+                    onMouseEnter={() => setHoveredIndex(i)}
+                    onFocus={() => setHoveredIndex(i)}
+                    tabIndex={0}
+                  >
                     {/* NODE */}
-                    <div className="relative h-18 w-18 z-10 flex items-center justify-center">
-                      {isNodeActive && tick < nodeActivateTick + 15 && tick !== 999 && (
-                        <span className="absolute inset-0 rounded-full border border-primary animate-radar-ring pointer-events-none" />
-                      )}
+                    <div 
+                      className={`relative h-18 w-18 z-10 flex items-center justify-center ${transitionClass} ${
+                        isHovered ? 'scale-[1.08] -translate-y-1' : 'scale-100 translate-y-0'
+                      }`}
+                    >
+                      {/* RADAR PULSE */}
                       <div 
-                        className={`absolute inset-0 rounded-full border transition-all duration-400 ${
-                          isNodeActive 
-                            ? `border-primary bg-primary/10 ${tick !== 999 ? 'animate-node-pulse' : ''}`
-                            : 'border-white/10 bg-white/[0.02]'
-                        }`}
-                        style={isNodeActive && tick === 999 ? { boxShadow: '0 0 4px var(--primary)' } : undefined}
+                        className={`absolute inset-0 rounded-full border border-primary ${transitionClass} ${
+                          isHovered ? 'opacity-100 animate-radar-ring' : 'opacity-0'
+                        }`} 
                       />
+                      
+                      {/* BACKGROUND / GLOW */}
+                      <div 
+                        className={`absolute inset-0 rounded-full border ${transitionClass} ${
+                          isHovered 
+                            ? 'border-primary bg-primary/20' 
+                            : isPast 
+                              ? 'border-primary/50 bg-primary/10'
+                              : 'border-white/10 bg-white/[0.02]'
+                        }`}
+                        style={{
+                          boxShadow: isHovered 
+                            ? '0 0 20px var(--primary)' 
+                            : isPast 
+                              ? '0 0 8px var(--primary)' 
+                              : 'none'
+                        }}
+                      />
+                      
                       <div className="relative z-10 h-full w-full rounded-full flex items-center justify-center overflow-hidden">
-                        <Icon className={`h-7 w-7 transition-opacity duration-400 ${isNodeActive ? 'text-primary opacity-100' : 'text-primary opacity-30'}`} />
+                        <Icon className={`h-7 w-7 ${transitionClass} ${
+                          isHovered 
+                            ? 'text-white' 
+                            : isPast 
+                              ? 'text-primary' 
+                              : 'text-primary/40'
+                        }`} 
+                        style={isHovered ? { filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.8))' } : undefined}
+                        />
                       </div>
                     </div>
                     
                     {/* BADGE AND TEXT */}
                     <div className="mt-6 flex items-center justify-center gap-2 relative z-10">
-                      <span className={`h-5 w-5 rounded-full transition-all duration-400 flex items-center justify-center font-mono text-[10px] font-bold ${
-                        isNodeActive ? 'bg-primary/20 text-primary scale-100 opacity-100' : 'bg-white/5 text-white/40 scale-95 opacity-50'
-                      }`}>
+                      <span className={`h-5 w-5 rounded-full ${transitionClass} flex items-center justify-center font-mono text-[10px] font-bold ${
+                        isHovered 
+                          ? 'bg-primary text-white' 
+                          : isPast 
+                            ? 'bg-primary/20 text-primary' 
+                            : 'bg-white/5 text-white/40'
+                      }`}
+                      style={isHovered ? { boxShadow: '0 0 8px var(--primary)' } : undefined}
+                      >
                         0{i + 1}
                       </span>
-                      <span className={`text-base font-semibold transition-colors duration-400 ${isNodeActive ? 'text-white' : 'text-white/50'}`}>
+                      <span className={`text-base font-semibold ${transitionClass} ${
+                        isHovered ? 'text-white' : isPast ? 'text-white/80' : 'text-white/40'
+                      }`}>
                         {s.title}
                       </span>
                     </div>
-                    <div className="mt-2 text-sm text-muted-foreground max-w-[12rem] mx-auto relative z-10">
+                    <div className={`mt-2 text-sm max-w-[12rem] mx-auto relative z-10 ${transitionClass} ${
+                      isHovered ? 'opacity-100 -translate-y-1 text-white/90' : 'opacity-60 translate-y-0 text-muted-foreground'
+                    }`}>
                       {s.desc}
                     </div>
                   </div>
@@ -3521,7 +3549,6 @@ function FinalCTA() {
                 </div>
                 <div className="flex items-center gap-5 text-xs text-muted-foreground font-medium justify-center md:justify-end w-full">
                   <span className="flex items-center gap-1.5"><User className="h-3.5 w-3.5 opacity-70" /> No account required</span>
-                  <span className="flex items-center gap-1.5"><Github className="h-3.5 w-3.5 opacity-70" /> Open source</span>
                 </div>
               </div>
             </div>
@@ -3583,22 +3610,25 @@ function Footer() {
         <div>
           <div className="text-white font-semibold text-sm">Social</div>
           <div className="mt-3 flex items-center gap-2">
-            {[Twitter, Linkedin, Github, Youtube].map((I, i) => (
+            {[
+              { Icon: Linkedin, href: "https://www.linkedin.com/in/moksh-patel-98591a36b?utm_source=share_via&utm_content=profile&utm_medium=member_android" },
+              { Icon: Github, href: "https://github.com/moksh104" }
+            ].map(({ Icon, href }, i) => (
               <a
                 key={i}
-                href="#"
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="h-8 w-8 rounded-lg border border-white/10 hover:border-primary/40 hover:text-primary hover:-translate-y-1 text-muted-foreground flex items-center justify-center transition-all"
               >
-                <I className="h-4 w-4" />
+                <Icon className="h-4 w-4" />
               </a>
             ))}
           </div>
         </div>
       </div>
       <div className="mx-auto max-w-[1400px] mt-10 pt-6 border-t border-white/5 flex flex-col gap-4 text-xs text-muted-foreground">
-        <div className="text-center sm:text-left font-mono text-[10px] tracking-wider text-muted-foreground/60">
-          Built with: Flutter · Next.js · PostgreSQL · Prisma · Unity · Firebase · Cloudinary
-        </div>
+
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           <span className="text-white/40">© {new Date().getFullYear()} ForenShield. All rights reserved.</span>
           <span className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5">
