@@ -39,7 +39,7 @@ import {
 /* =============================================================
    MOCKUP CONTAINER
    ============================================================= */
-export function MockupContainer({ children, hideNav = false, activeTab = "home" }: { children: ReactNode, hideNav?: boolean, activeTab?: string }) {
+function MockupContainer({ children, hideNav = false, activeTab = "home" }: { children: ReactNode, hideNav?: boolean, activeTab?: string }) {
   return (
     <div className="relative w-[360px] h-[780px] bg-background border border-white/10 rounded-[40px] overflow-hidden flex flex-col shadow-2xl shrink-0 pointer-events-auto text-left group/mockup">
       {/* Status Bar */}

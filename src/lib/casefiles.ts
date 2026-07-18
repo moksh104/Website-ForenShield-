@@ -2,9 +2,9 @@
 // Self-contained data — used by /investigate and /casefiles routes.
 
 export type Severity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
-export type Difficulty = "Rookie" | "Analyst" | "Detective" | "Specialist";
+type Difficulty = "Rookie" | "Analyst" | "Detective" | "Specialist";
 
-export type EvidenceType =
+type EvidenceType =
   | "email"
   | "message"
   | "callLog"
@@ -26,7 +26,7 @@ export type Evidence = {
   body: string;
 };
 
-export type TimelineNode = {
+type TimelineNode = {
   id: string;
   label: string;
   // ids of evidence supporting this node
@@ -355,9 +355,7 @@ export const CASE_FILES: CaseFile[] = [
   },
 ];
 
-export function getCase(id: string): CaseFile | undefined {
-  return CASE_FILES.find((c) => c.id === id);
-}
+
 
 export const RANKS = [
   { name: "Cyber Rookie", xp: 0 },

@@ -12,7 +12,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { BatcomputerHUD } from "../components/hud/BatcomputerHUD";
-import logo from "../assets/logo.png";
+import logo from "../assets/logo.webp";
 
 function NotFoundComponent() {
   return (
